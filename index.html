@@ -453,14 +453,6 @@ header {
           <label>V3 — Past Participle</label>
           <input class="add-inp" id="av-v3" placeholder="spoken" autocomplete="off" spellcheck="false">
         </div>
-        <div class="add-field-wrap">
-          <label>Транскрипция IPA <span style="font-weight:400;color:var(--muted)">(необязательно)</span></label>
-          <input class="add-inp" id="av-ipa" placeholder="ˈspəʊkən" autocomplete="off" spellcheck="false">
-        </div>
-        <div class="add-field-wrap">
-          <label>Произношение рус <span style="font-weight:400;color:var(--muted)">(необязательно)</span></label>
-          <input class="add-inp plain" id="av-read" placeholder="спо́укэн" autocomplete="off" spellcheck="false">
-        </div>
       </div>
       <div class="add-msg" id="av-msg"></div>
       <button class="add-submit" onclick="addWord()">Добавить глагол</button>
@@ -474,14 +466,6 @@ header {
         <div class="add-field-wrap" style="grid-column:1/-1">
           <label>Слово (English)</label>
           <input class="add-inp" id="as-en" placeholder="brave" autocomplete="off" spellcheck="false">
-        </div>
-        <div class="add-field-wrap">
-          <label>Транскрипция IPA <span style="font-weight:400;color:var(--muted)">(необязательно)</span></label>
-          <input class="add-inp" id="as-ipa" placeholder="breɪv" autocomplete="off" spellcheck="false">
-        </div>
-        <div class="add-field-wrap">
-          <label>Произношение рус <span style="font-weight:400;color:var(--muted)">(необязательно)</span></label>
-          <input class="add-inp plain" id="as-read" placeholder="брэйв" autocomplete="off" spellcheck="false">
         </div>
       </div>
       <div class="add-msg" id="as-msg"></div>
@@ -1891,37 +1875,49 @@ function renderAdd() {
   renderCustomList();
 }
 
-function addWord() {
+async function fetchPron(word) {
+  try {
+    const lookup = word.split(' ')[0];
+    const res = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(lookup));
+    if (!res.ok) return '';
+    const data = await res.json();
+    const phonetics = (data[0] && data[0].phonetics) ? data[0].phonetics : [];
+    const found = phonetics.find(p => p.text && p.audio) || phonetics.find(p => p.text) || {};
+    return (found.text || '').replace(/\//g, '').trim();
+  } catch(e) { return ''; }
+}
+
+async function addWord() {
   if (cat === 'verbs') {
-    const ru = document.getElementById('av-ru').value.trim();
-    const v1 = document.getElementById('av-v1').value.trim().toLowerCase();
-    const v2 = document.getElementById('av-v2').value.trim().toLowerCase();
-    const v3 = document.getElementById('av-v3').value.trim().toLowerCase();
+    const ru  = document.getElementById('av-ru').value.trim();
+    const v1  = document.getElementById('av-v1').value.trim().toLowerCase();
+    const v2  = document.getElementById('av-v2').value.trim().toLowerCase();
+    const v3  = document.getElementById('av-v3').value.trim().toLowerCase();
     const msg = document.getElementById('av-msg');
     if (!ru || !v1 || !v2 || !v3) { showMsg(msg, '⚠ Заполни все поля', false); return; }
-    if ([...VERBS,...customVerbs].find(v => v[0] === v1)) { showMsg(msg, `⚠ "${v1}" уже есть в словаре`, false); return; }
-    const avIpa  = document.getElementById('av-ipa').value.trim();
-    const avRead = document.getElementById('av-read').value.trim();
-    customVerbs.push([v1, v2, v3, ru, avIpa, avRead]);
+    if ([...VERBS,...customVerbs].find(v => v[0] === v1)) { showMsg(msg, '⚠ "' + v1 + '" уже есть в словаре', false); return; }
+    showMsg(msg, '⏳ Загружаю транскрипцию...', true);
+    const ipa = await fetchPron(v1);
+    customVerbs.push([v1, v2, v3, ru, ipa, '']);
     saveStorage(); updateLogo();
-    ['av-ru','av-v1','av-v2','av-v3','av-ipa','av-read'].forEach(id => document.getElementById(id).value = '');
-    showMsg(msg, `✓ "${v1}" добавлен!`, true);
+    ['av-ru','av-v1','av-v2','av-v3'].forEach(id => { document.getElementById(id).value = ''; });
+    showMsg(msg, '✓ "' + v1 + '" добавлен!' + (ipa ? ' [' + ipa + ']' : ''), true);
     renderCustomList();
   } else {
-    const ru = document.getElementById('as-ru').value.trim();
-    const en = document.getElementById('as-en').value.trim().toLowerCase();
+    const ru  = document.getElementById('as-ru').value.trim();
+    const en  = document.getElementById('as-en').value.trim().toLowerCase();
     const msg = document.getElementById('as-msg');
     if (!ru || !en) { showMsg(msg, '⚠ Заполни все поля', false); return; }
     const baseArr = cat === 'adj' ? [...ADJS,...customAdjs] : cat === 'nouns' ? [...NOUNS,...customNouns] : [...PHRASAL,...customPhrasal];
-    if (baseArr.find(v => v[0] === en)) { showMsg(msg, `⚠ "${en}" уже есть в словаре`, false); return; }
-    const asIpa  = document.getElementById('as-ipa').value.trim();
-    const asRead = document.getElementById('as-read').value.trim();
-    if      (cat === 'adj')     customAdjs.push([en, ru, asIpa, asRead]);
-    else if (cat === 'nouns')   customNouns.push([en, ru, asIpa, asRead]);
-    else                        customPhrasal.push([en, ru, asIpa, asRead]);
+    if (baseArr.find(v => v[0] === en)) { showMsg(msg, '⚠ "' + en + '" уже есть в словаре', false); return; }
+    showMsg(msg, '⏳ Загружаю транскрипцию...', true);
+    const ipa = await fetchPron(en);
+    if      (cat === 'adj')   customAdjs.push([en, ru, ipa, '']);
+    else if (cat === 'nouns') customNouns.push([en, ru, ipa, '']);
+    else                      customPhrasal.push([en, ru, ipa, '']);
     saveStorage(); updateLogo();
-    ['as-ru','as-en','as-ipa','as-read'].forEach(id => document.getElementById(id).value = '');
-    showMsg(msg, `✓ "${en}" добавлено!`, true);
+    ['as-ru','as-en'].forEach(id => { document.getElementById(id).value = ''; });
+    showMsg(msg, '✓ "' + en + '" добавлено!' + (ipa ? ' [' + ipa + ']' : ''), true);
     renderCustomList();
   }
 }
