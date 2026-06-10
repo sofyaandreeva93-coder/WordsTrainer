@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WordTrainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0e0e14;
+  --surface:  #16161f;
+  --surface2: #1e1e2a;
+  --border:   #2a2a3a;
+  --accent:   #7c6af7;
+  --accent2:  #a78bfa;
+  --green:    #4ade80;
+  --red:      #f87171;
+  --text:     #e8e8f0;
+  --muted:    #7070a0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px;
+}
+
+/* ── HEADER ── */
+header {
+  width: 100%; max-width: 760px;
+  display: flex; align-items: center; justify-content: space-between; padding: 16px 0 18px;
+}
+.logo { font-size: 1.1rem; font-weight: 700; color: var(--accent2); }
+.logo span { color: var(--muted); font-weight: 400; }
+.stats { display: flex; gap: 16px; font-size: .85rem; color: var(--muted); }
+.stats b { color: var(--text); font-weight: 600; }
+
+/* ── CATEGORY TABS ── */
+.cat-tabs {
+  width: 100%; max-width: 760px;
+  display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;
+}
+.cat-btn {
+  flex: 1; min-width: 120px; padding: 10px 16px;
+  border: 2px solid var(--border); background: transparent;
+  color: var(--muted); font-family: inherit; font-size: .92rem; font-weight: 600;
+  border-radius: 10px; cursor: pointer; transition: .15s; text-align: center;
+}
+.cat-btn.active { border-color: var(--accent2); color: var(--accent2); background: #1a1a30; }
+.cat-btn:hover:not(.active) { border-color: var(--muted); color: var(--text); }
+
+/* ── MODE TABS ── */
+.mode-tabs {
+  width: 100%; max-width: 760px;
+  display: flex; gap: 6px; background: var(--surface);
+  border-radius: 12px; padding: 5px; margin-bottom: 20px;
+}
+.mode-btn {
+  flex: 1; padding: 9px 10px; border: none; background: transparent;
+  color: var(--muted); font-family: inherit; font-size: .87rem; font-weight: 500;
+  border-radius: 8px; cursor: pointer; transition: .15s;
+}
+.mode-btn.active { background: var(--accent); color: #fff; }
+.mode-btn:hover:not(.active) { color: var(--text); background: var(--border); }
+
+/* ── CARD ── */
+.card {
+  width: 100%; max-width: 760px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 18px; padding: 28px;
+}
+
+/* ── PROGRESS ── */
+.progress { margin-bottom: 22px; }
+.progress-info {
+  display: flex; justify-content: space-between;
+  font-size: .8rem; color: var(--muted); margin-bottom: 6px;
+}
+.progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.progress-fill {
+  height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 2px; transition: width .3s;
+}
+
+/* ── CHIPS (settings) ── */
+.chips { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+.chip {
+  padding: 7px 14px; border: 1.5px solid var(--border); background: var(--surface2);
+  color: var(--muted); font-family: inherit; font-size: .8rem; font-weight: 500;
+  border-radius: 8px; cursor: pointer; transition: .12s;
+}
+.chip.active { border-color: var(--accent); color: var(--accent2); background: #1a1a30; }
+
+/* ── QUIZ ── */
+.q-label { font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.q-word { font-family: 'JetBrains Mono', monospace; font-size: 2.2rem; font-weight: 500; color: var(--accent2); margin-bottom: 6px; }
+.q-hint { font-size: .88rem; color: var(--muted); margin-bottom: 10px; }
+.q-pron { min-height: 36px; margin-bottom: 16px; }
+.q-pron .pron-ipa  { display: block; font-family: 'JetBrains Mono', monospace; font-size: .92rem; color: var(--accent2); opacity: .85; }
+.q-pron .pron-read { display: block; font-size: .8rem; color: var(--muted); margin-top: 2px; }
+.answers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.ans-btn {
+  background: var(--surface2); border: 1.5px solid var(--border); color: var(--text);
+  font-family: 'JetBrains Mono', monospace; font-size: .9rem;
+  padding: 13px 16px; border-radius: 10px; cursor: pointer; text-align: left; transition: .12s; line-height: 1.4;
+}
+.ans-btn:hover:not(:disabled) { border-color: var(--accent); background: #1e1e35; }
+.ans-btn.correct { border-color: var(--green); background: #0f2a1a; color: var(--green); }
+.ans-btn.wrong   { border-color: var(--red);   background: #2a0f0f; color: var(--red); }
+.ans-btn.plain   { font-family: 'Space Grotesk', sans-serif; }
+.ans-btn:disabled { cursor: default; }
+.feedback { font-size: .9rem; min-height: 20px; }
+.feedback.ok  { color: var(--green); }
+.feedback.err { color: var(--red); }
+
+/* ── END SCREEN ── */
+.end-screen { text-align: center; padding: 16px 0; }
+.end-score { font-size: 3.6rem; font-weight: 700; color: var(--accent2); line-height: 1; margin-bottom: 6px; }
+.end-desc { color: var(--muted); margin-bottom: 24px; }
+.end-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.btn-primary {
+  background: var(--accent); border: none; color: #fff;
+  font-family: inherit; font-size: .92rem; font-weight: 600;
+  padding: 12px 24px; border-radius: 10px; cursor: pointer; transition: .12s;
+}
+.btn-primary:hover { background: var(--accent2); }
+.btn-ghost {
+  background: transparent; border: 1.5px solid var(--border); color: var(--text);
+  font-family: inherit; font-size: .92rem; font-weight: 500;
+  padding: 12px 24px; border-radius: 10px; cursor: pointer; transition: .12s;
+}
+.btn-ghost:hover { background: var(--surface2); }
+
+/* ── INPUT MODE ── */
+.input-row { display: flex; gap: 10px; margin-bottom: 10px; }
+.inp {
+  flex: 1; background: var(--surface2); border: 1.5px solid var(--border); color: var(--text);
+  font-family: 'JetBrains Mono', monospace; font-size: .98rem;
+  padding: 12px 16px; border-radius: 10px; outline: none; transition: .12s;
+}
+.inp:focus   { border-color: var(--accent); }
+.inp.correct { border-color: var(--green); background: #0f2a1a; color: var(--green); }
+.inp.wrong   { border-color: var(--red);   background: #2a0f0f; }
+.check-btn {
+  background: var(--accent); border: none; color: #fff;
+  font-family: inherit; font-size: .88rem; font-weight: 600;
+  padding: 12px 18px; border-radius: 10px; cursor: pointer; white-space: nowrap; transition: .12s;
+}
+.check-btn:hover { background: var(--accent2); }
+.next-btn {
+  width: 100%; margin-top: 8px; background: var(--surface2); border: 1.5px solid var(--border);
+  color: var(--text); font-family: inherit; font-size: .88rem; font-weight: 500;
+  padding: 11px; border-radius: 10px; cursor: pointer; transition: .12s;
+}
+.next-btn:hover { background: var(--border); }
+
+/* ── FLASHCARDS ── */
+.fc-wrap { perspective: 800px; margin-bottom: 22px; }
+.fc {
+  position: relative; height: 190px;
+  transform-style: preserve-3d; transition: transform .5s cubic-bezier(.4,0,.2,1); cursor: pointer;
+}
+.fc.flipped { transform: rotateY(180deg); }
+.fc-front, .fc-back {
+  position: absolute; inset: 0; backface-visibility: hidden;
+  border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 22px;
+}
+.fc-front { background: linear-gradient(135deg,#1a1a2e,#16213e); border: 1px solid var(--border); }
+.fc-back  { background: linear-gradient(135deg,#0f2a1a,#1a2e1a); border: 1px solid var(--green); transform: rotateY(180deg); }
+.fc-word  { font-family: 'JetBrains Mono', monospace; font-size: 1.9rem; color: var(--accent2); font-weight: 500; margin-bottom: 4px; }
+.fc-ipa   { font-family: 'JetBrains Mono', monospace; font-size: .88rem; color: var(--accent2); opacity: .8; margin-bottom: 2px; text-align: center; }
+.fc-read  { font-size: .78rem; color: var(--muted); text-align: center; }
+.fc-sub   { font-size: .8rem; color: var(--muted); margin-top: 8px; text-align: center; }
+.fc-tap   { font-size: .72rem; color: var(--muted); margin-top: 10px; }
+.fc-translation { font-size: 1.35rem; font-weight: 600; color: var(--green); margin-bottom: 4px; }
+.fc-nav { display: flex; gap: 10px; justify-content: center; }
+.fc-btn {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+  font-family: inherit; font-size: .84rem; font-weight: 500;
+  padding: 9px 20px; border-radius: 8px; cursor: pointer; transition: .12s;
+}
+.fc-btn:hover { background: var(--border); }
+.fc-btn.learned { border-color: var(--green); color: var(--green); }
+.fc-btn.learned:hover { background: #0f2a1a; }
+.fc-learned-info { font-size: .78rem; color: var(--muted); text-align: center; margin-top: 12px; }
+
+/* ── BROWSE ── */
+.search-inp {
+  width: 100%; background: var(--surface2); border: 1.5px solid var(--border); color: var(--text);
+  font-family: inherit; font-size: .92rem; padding: 10px 16px; border-radius: 10px;
+  outline: none; margin-bottom: 14px; transition: .12s;
+}
+.search-inp:focus { border-color: var(--accent); }
+.word-table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+.word-table th {
+  text-align: left; padding: 7px 10px; color: var(--muted);
+  font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  border-bottom: 1px solid var(--border);
+}
+.word-table td { padding: 8px 10px; border-bottom: 1px solid #1e1e2a; vertical-align: middle; }
+.word-table tr:hover td { background: var(--surface2); }
+.col-en   { font-family: 'JetBrains Mono', monospace; color: var(--accent2); }
+.col-v2, .col-v3 { font-family: 'JetBrains Mono', monospace; color: var(--text); }
+.col-pron { min-width: 140px; }
+.pron-ipa  { display: block; font-family: 'JetBrains Mono', monospace; font-size: .76rem; color: var(--accent2); opacity: .8; }
+.pron-read { display: block; font-size: .72rem; color: var(--muted); margin-top: 1px; }
+.col-ru { color: var(--muted); }
+.irreg { display: inline-block; background: #2a1a4a; color: var(--accent2); font-size: .62rem; padding: 1px 5px; border-radius: 3px; font-weight: 600; margin-left: 4px; vertical-align: middle; }
+.row-actions { display: flex; gap: 4px; justify-content: flex-end; white-space: nowrap; }
+.btn-edit {
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  font-size: .88rem; padding: 3px 7px; border-radius: 5px; transition: .12s;
+}
+.btn-edit:hover { color: var(--accent2); background: #1a1a30; }
+.btn-del {
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  font-size: .88rem; padding: 3px 7px; border-radius: 5px; transition: .12s;
+}
+.btn-del:hover { color: var(--red); background: #2a0f0f; }
+
+/* ── INLINE EDIT ── */
+.inline-edit { display: flex; gap: 6px; align-items: center; }
+.inline-inp {
+  flex: 1; background: var(--surface2); border: 1.5px solid var(--accent); color: var(--text);
+  font-family: 'Space Grotesk', sans-serif; font-size: .84rem;
+  padding: 4px 8px; border-radius: 6px; outline: none; min-width: 100px;
+}
+.btn-save {
+  background: var(--accent); border: none; color: #fff;
+  font-family: inherit; font-size: .78rem; font-weight: 600;
+  padding: 4px 10px; border-radius: 6px; cursor: pointer;
+}
+.btn-save:hover { background: var(--accent2); }
+.btn-cancel {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  font-family: inherit; font-size: .78rem; padding: 4px 8px; border-radius: 6px; cursor: pointer;
+}
+.btn-cancel:hover { background: var(--border); }
+
+/* ── ADD MODE ── */
+.add-section { display: flex; flex-direction: column; gap: 14px; }
+.add-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.add-field-wrap { display: flex; flex-direction: column; gap: 4px; }
+.add-field-wrap label { font-size: .72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.add-inp {
+  background: var(--surface2); border: 1.5px solid var(--border); color: var(--text);
+  font-family: 'JetBrains Mono', monospace; font-size: .92rem;
+  padding: 10px 13px; border-radius: 10px; outline: none; width: 100%; transition: .12s;
+}
+.add-inp:focus { border-color: var(--accent); }
+.add-inp.plain { font-family: 'Space Grotesk', sans-serif !important; }
+.add-submit {
+  background: var(--accent); border: none; color: #fff; font-family: inherit;
+  font-size: .92rem; font-weight: 600; padding: 12px; border-radius: 10px; cursor: pointer; transition: .12s;
+}
+.add-submit:hover { background: var(--accent2); }
+.add-msg { font-size: .88rem; min-height: 20px; text-align: center; }
+.add-msg.ok  { color: var(--green); }
+.add-msg.err { color: var(--red); }
+.add-divider { border: none; border-top: 1px solid var(--border); margin: 6px 0; }
+.custom-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.custom-title { font-size: .8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.btn-clear-all {
+  background: transparent; border: 1px solid var(--border); color: var(--red);
+  font-family: inherit; font-size: .74rem; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: .12s;
+}
+.btn-clear-all:hover { background: #2a0f0f; }
+.custom-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: .84rem; }
+.custom-item:last-child { border-bottom: none; }
+.ci-en  { font-family: 'JetBrains Mono', monospace; color: var(--accent2); min-width: 100px; }
+.ci-sub { font-family: 'JetBrains Mono', monospace; color: var(--muted); font-size: .76rem; flex: 1; }
+.ci-ru  { color: var(--text); font-size: .82rem; flex: 1; }
+.ci-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: .9rem; padding: 2px 6px; border-radius: 4px; transition: .12s; flex-shrink: 0; }
+.ci-del:hover { color: var(--red); background: #2a0f0f; }
+.empty-list { color: var(--muted); font-size: .86rem; text-align: center; padding: 18px 0; }
+
+/* ── UTILITIES ── */
+.hidden { display: none !important; }
+@media (max-width: 520px) {
+  .card { padding: 16px; }
+  .q-word { font-size: 1.6rem; }
+  .answers { grid-template-columns: 1fr; }
+  .fc-word { font-size: 1.5rem; }
+  header { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .cat-tabs { flex-wrap: wrap; }
+  .add-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">WordTrainer <span id="logo-sub">...</span></div>
+  <div class="stats">
+    <span>&#10003; <b id="s-ok">0</b></span>
+    <span>&#10007; <b id="s-err">0</b></span>
+    <span>&#128293; <b id="s-streak">0</b></span>
+  </div>
+</header>
+
+<!-- CATEGORY TABS -->
+<div class="cat-tabs">
+  <button class="cat-btn" data-cat="verbs"   onclick="switchCat('verbs')">&#128221; Глаголы</button>
+  <button class="cat-btn" data-cat="adj"     onclick="switchCat('adj')">&#11088; Прилагательные</button>
+  <button class="cat-btn" data-cat="nouns"   onclick="switchCat('nouns')">&#128230; Существительные</button>
+  <button class="cat-btn" data-cat="phrasal" onclick="switchCat('phrasal')">&#128279; Фразовые глаголы</button>
+</div>
+
+<!-- MODE TABS -->
+<div class="mode-tabs">
+  <button class="mode-btn" data-mode="quiz"   onclick="switchMode('quiz')">Тест</button>
+  <button class="mode-btn" data-mode="input"  onclick="switchMode('input')">Ввод</button>
+  <button class="mode-btn" data-mode="cards"  onclick="switchMode('cards')">Карточки</button>
+  <button class="mode-btn" data-mode="browse" onclick="switchMode('browse')">Все слова</button>
+  <button class="mode-btn" data-mode="add"    onclick="switchMode('add')">+ Добавить</button>
+</div>
+
+<div class="card" id="main-card">
+
+  <!-- ══ QUIZ ══ -->
+  <div id="pane-quiz">
+    <!-- verb chips -->
+    <div class="chips" id="chips-verbs">
+      <button class="chip active" data-dir="ru"    onclick="setDir('ru')">Рус &#8594; Англ</button>
+      <button class="chip"        data-dir="en"    onclick="setDir('en')">Англ &#8594; Рус</button>
+      <button class="chip"        data-dir="forms" onclick="setDir('forms')">V1 &#8594; V2/V3</button>
+      <button class="chip"        data-dir="irreg" onclick="setDir('irreg')">Только неправильные</button>
+    </div>
+    <!-- adj/noun/phrasal chips -->
+    <div class="chips hidden" id="chips-simple">
+      <button class="chip active" data-dir2="ru" onclick="setDir2('ru')">Рус &#8594; Англ</button>
+      <button class="chip"        data-dir2="en" onclick="setDir2('en')">Англ &#8594; Рус</button>
+    </div>
+
+    <div class="progress">
+      <div class="progress-info"><span id="q-cur">1</span> / <span id="q-tot">0</span><span id="q-pct">0%</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="q-fill" style="width:0%"></div></div>
+    </div>
+
+    <div id="quiz-body">
+      <div class="q-label" id="q-lbl"></div>
+      <div class="q-word"  id="q-word"></div>
+      <div class="q-hint"  id="q-hint"></div>
+      <div class="q-pron" id="q-pron"></div>
+      <div class="answers" id="q-answers"></div>
+      <div class="feedback" id="q-fb"></div>
+    </div>
+
+    <div id="quiz-end" class="end-screen hidden">
+      <div class="end-score" id="end-score"></div>
+      <div class="end-desc"  id="end-desc"></div>
+      <div class="end-actions">
+        <button class="btn-primary" onclick="startQuiz()">&#8635; Ещё раз</button>
+        <button class="btn-ghost"   onclick="switchMode('cards')">Карточки</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ INPUT ══ -->
+  <div id="pane-input" class="hidden">
+    <div class="chips" id="chips-input-verbs">
+      <button class="chip active" data-idir="ru"    onclick="setIDir('ru')">Рус &#8594; Англ</button>
+      <button class="chip"        data-idir="forms" onclick="setIDir('forms')">V1 &#8594; V2+V3</button>
+    </div>
+    <div class="chips hidden" id="chips-input-simple">
+      <button class="chip active" data-idir2="ru" onclick="setIDir2('ru')">Рус &#8594; Англ</button>
+      <button class="chip"        data-idir2="en" onclick="setIDir2('en')">Англ &#8594; Рус</button>
+    </div>
+
+    <div class="progress">
+      <div class="progress-info"><span id="i-cur">1</span> / <span id="i-tot">0</span><span id="i-pct">0%</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="i-fill" style="width:0%"></div></div>
+    </div>
+
+    <div class="q-label" id="i-lbl"></div>
+    <div class="q-word"  id="i-word"></div>
+    <div class="q-hint"  id="i-hint"></div>
+
+    <div id="i-area-forms" class="hidden">
+      <div class="input-row">
+        <input class="inp" id="i-v2" placeholder="Past Simple (V2)" autocomplete="off" spellcheck="false">
+        <input class="inp" id="i-v3" placeholder="Past Participle (V3)" autocomplete="off" spellcheck="false">
+      </div>
+      <button class="check-btn" style="width:100%;margin-bottom:10px" onclick="checkForms()">Проверить</button>
+    </div>
+    <div id="i-area-single">
+      <div class="input-row">
+        <input class="inp" id="i-single" placeholder="Твой ответ..." autocomplete="off" spellcheck="false">
+        <button class="check-btn" onclick="checkSingle()">Проверить</button>
+      </div>
+    </div>
+
+    <div class="feedback" id="i-fb" style="margin-bottom:8px"></div>
+    <button class="next-btn" id="i-next" onclick="nextInput()">Пропустить &#8594;</button>
+  </div>
+
+  <!-- ══ FLASHCARDS ══ -->
+  <div id="pane-cards" class="hidden">
+    <div class="progress">
+      <div class="progress-info"><span id="fc-cur">1</span> / <span id="fc-tot">0</span><span id="fc-pct">0%</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="fc-fill" style="width:0%"></div></div>
+    </div>
+    <div class="fc-wrap">
+      <div class="fc" id="fc" onclick="flipCard()">
+        <div class="fc-front">
+          <div class="fc-word" id="fc-word"></div>
+          <div class="fc-ipa"  id="fc-ipa"></div>
+          <div class="fc-read" id="fc-read"></div>
+          <div class="fc-sub"  id="fc-sub"></div>
+          <div class="fc-tap">нажми, чтобы перевернуть &#8594;</div>
+        </div>
+        <div class="fc-back">
+          <div class="fc-translation" id="fc-ru"></div>
+          <div class="fc-sub"         id="fc-back-sub"></div>
+          <div class="fc-tap">&#8592; нажми снова</div>
+        </div>
+      </div>
+    </div>
+    <div class="fc-nav">
+      <button class="fc-btn"         onclick="fcNav(-1)">&#8592; Назад</button>
+      <button class="fc-btn learned" id="fc-lbtn" onclick="markLearned()">&#10003; Выучил</button>
+      <button class="fc-btn"         onclick="fcNav(1)">Вперёд &#8594;</button>
+    </div>
+    <div class="fc-learned-info">Выучено: <b id="fc-lcount" style="color:var(--green)">0</b></div>
+  </div>
+
+  <!-- ══ BROWSE ══ -->
+  <div id="pane-browse" class="hidden">
+    <input class="search-inp" id="search-inp" placeholder="Поиск..." oninput="renderBrowse()">
+    <table class="word-table">
+      <thead><tr id="tbl-head"></tr></thead>
+      <tbody id="tbl-body"></tbody>
+    </table>
+  </div>
+
+  <!-- ══ ADD ══ -->
+  <div id="pane-add" class="hidden">
+    <div id="add-verbs-form" class="add-section">
+      <div class="add-grid">
+        <div class="add-field-wrap" style="grid-column:1/-1">
+          <label>Перевод (рус)</label>
+          <input class="add-inp plain" id="av-ru" placeholder="например: говорить" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="add-field-wrap">
+          <label>V1 — Infinitive</label>
+          <input class="add-inp" id="av-v1" placeholder="speak" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="add-field-wrap">
+          <label>V2 — Past Simple</label>
+          <input class="add-inp" id="av-v2" placeholder="spoke" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="add-field-wrap" style="grid-column:1/-1">
+          <label>V3 — Past Participle</label>
+          <input class="add-inp" id="av-v3" placeholder="spoken" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="add-field-wrap">
+          <label>Транскрипция IPA <span style="font-weight:400;color:var(--muted)">(необязательно)</span></label>
+          <input class="add-inp" id="av-ipa" placeholder="ˈspəʊkən" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="add-field-wrap">
+          <label>Произношение рус <span style="font-weight:400;color:var(--muted)">(необязательно)</span></label>
+          <input class="add-inp plain" id="av-read" placeholder="спо́укэн" autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+      <div class="add-msg" id="av-msg"></div>
+      <button class="add-submit" onclick="addWord()">Добавить глагол</button>
+    </div>
+    <div id="add-simple-form" class="add-section hidden">
+      <div class="add-grid">
+        <div class="add-field-wrap" style="grid-column:1/-1">
+          <label>Перевод (рус)</label>
+          <input class="add-inp plain" id="as-ru" placeholder="например: смелый" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="add-field-wrap" style="grid-column:1/-1">
+          <label>Слово (English)</label>
+          <input class="add-inp" id="as-en" placeholder="brave" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="add-field-wrap">
+          <label>Транскрипция IPA <span style="font-weight:400;color:var(--muted)">(необязательно)</span></label>
+          <input class="add-inp" id="as-ipa" placeholder="breɪv" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="add-field-wrap">
+          <label>Произношение рус <span style="font-weight:400;color:var(--muted)">(необязательно)</span></label>
+          <input class="add-inp plain" id="as-read" placeholder="брэйв" autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+      <div class="add-msg" id="as-msg"></div>
+      <button class="add-submit" onclick="addWord()">Добавить слово</button>
+    </div>
+    <hr class="add-divider" style="margin-top:20px">
+    <div class="custom-header">
+      <div class="custom-title">Мои слова (<span id="custom-count">0</span>)</div>
+      <button class="btn-clear-all" onclick="clearCustom()">Удалить все</button>
+    </div>
+    <div id="custom-list"></div>
+  </div>
+
+</div><!-- /.card -->
+
+<script>
+const VERBS = [
+  ["act", "acted", "acted", "действовать", "ækt", "экт"],
+  ["activate", "activated", "activated", "активировать", "ˈæktɪveɪt", "э́ктивэйт"],
+  ["admire", "admired", "admired", "восхищаться", "ədˈmaɪər", "эдма́йэр"],
+  ["advise", "advised", "advised", "советовать", "ədˈvaɪz", "эдва́йз"],
+  ["affect", "affected", "affected", "влиять", "əˈfekt", "эфе́кт"],
+  ["agree", "agreed", "agreed", "соглашаться", "əˈɡriː", "эгри́"],
+  ["allow", "allowed", "allowed", "разрешать", "əˈlaʊ", "эла́у"],
+  ["apologize", "apologized", "apologized", "извиняться", "əˈpɒlədʒaɪz", "эпо́лэджайз"],
+  ["appear", "appeared", "appeared", "появляться", "əˈpɪər", "эпи́р"],
+  ["apply", "applied", "applied", "подавать заявку; применять", "əˈplaɪ", "эпла́й"],
+  ["appreciate", "appreciated", "appreciated", "ценить", "əˈpriːʃieɪt", "эпри́шиэйт"],
+  ["approach", "approached", "approached", "подходить", "əˈproʊtʃ", "эпро́утч"],
+  ["arise", "arose", "arisen", "возникать", "əˈraɪz", "эра́йз"],
+  ["attend", "attended", "attended", "посещать", "əˈtend", "этэ́нд"],
+  ["avoid", "avoided", "avoided", "избегать", "əˈvɔɪd", "эво́йд"],
+  ["ban", "banned", "banned", "запрещать", "bæn", "бэн"],
+  ["bark", "barked", "barked", "лаять", "bɑːrk", "ба́рк"],
+  ["believe", "believed", "believed", "верить", "bɪˈliːv", "били́в"],
+  ["belong", "belonged", "belonged", "принадлежать", "bɪˈlɔːŋ", "bilóнг"],
+  ["bite", "bit", "bitten", "кусать", "baɪt", "байт"],
+  ["blow", "blew", "blown", "дуть", "bloʊ", "блоу"],
+  ["borrow", "borrowed", "borrowed", "брать взаймы", "ˈbɒroʊ", "бо́роу"],
+  ["breathe", "breathed", "breathed", "дышать", "briːð", "бриз"],
+  ["build", "built", "built", "строить", "bɪld", "билд"],
+  ["cancel", "canceled", "canceled", "отменять", "ˈkænsəl", "кэ́нсэл"],
+  ["carry", "carried", "carried", "нести", "ˈkæri", "кэ́ри"],
+  ["catch", "caught", "caught", "ловить", "kætʃ", "кэтч"],
+  ["celebrate", "celebrated", "celebrated", "праздновать", "ˈselɪbreɪt", "сэ́либрэйт"],
+  ["certify", "certified", "certified", "сертифицировать", "ˈsɜːrtɪfaɪ", "сёртифай"],
+  ["change", "changed", "changed", "изменять", "tʃeɪndʒ", "чейндж"],
+  ["check", "checked", "checked", "проверять", "tʃek", "чек"],
+  ["cheer", "cheered", "cheered", "подбадривать", "tʃɪər", "чи́р"],
+  ["choose", "chose", "chosen", "выбирать", "tʃuːz", "чуз"],
+  ["climb", "climbed", "climbed", "взбираться", "klaɪm", "клайм"],
+  ["collect", "collected", "collected", "собирать", "kəˈlekt", "колэ́кт"],
+  ["communicate", "communicated", "communicated", "общаться", "kəˈmjuːnɪkeɪt", "комью́никэйт"],
+  ["complain", "complained", "complained", "жаловаться", "kəmˈpleɪn", "комплэ́йн"],
+  ["complete", "completed", "completed", "завершать", "kəmˈpliːt", "компли́т"],
+  ["consider", "considered", "considered", "рассматривать", "kənˈsɪdər", "консидэр"],
+  ["consist", "consisted", "consisted", "состоять", "kənˈsɪst", "конси́ст"],
+  ["continue", "continued", "continued", "продолжать", "kənˈtɪnjuː", "конти́нью"],
+  ["convince", "convinced", "convinced", "убеждать", "kənˈvɪns", "конви́нс"],
+  ["cope", "coped", "coped", "справляться", "koʊp", "коуп"],
+  ["create", "created", "created", "создавать", "kriˈeɪt", "криэ́йт"],
+  ["creep", "crept", "crept", "ползти", "kriːp", "крип"],
+  ["cry", "cried", "cried", "плакать", "kraɪ", "край"],
+  ["cut", "cut", "cut", "резать", "kʌt", "кат"],
+  ["deal", "dealt", "dealt", "иметь дело", "diːl", "дил"],
+  ["decide", "decided", "decided", "решать", "dɪˈsaɪd", "диса́йд"],
+  ["decorate", "decorated", "decorated", "украшать", "ˈdekəreɪt", "дэ́корэйт"],
+  ["define", "defined", "defined", "определять", "dɪˈfaɪn", "дифа́йн"],
+  ["describe", "described", "described", "описывать", "dɪˈskraɪb", "дискра́йб"],
+  ["deserve", "deserved", "deserved", "заслуживать", "dɪˈzɜːrv", "дизёрв"],
+  ["develop", "developed", "developed", "развивать", "dɪˈveləp", "дивэ́лэп"],
+  ["die", "died", "died", "умирать", "daɪ", "дай"],
+  ["dig", "dug", "dug", "копать", "dɪɡ", "диг"],
+  ["discuss", "discussed", "discussed", "обсуждать", "dɪˈskʌs", "диска́с"],
+  ["disturb", "disturbed", "disturbed", "беспокоить", "dɪˈstɜːrb", "дистёрб"],
+  ["dive", "dived", "dived", "нырять", "daɪv", "дайв"],
+  ["drop", "dropped", "dropped", "ронять", "drɒp", "дроп"],
+  ["dry", "dried", "dried", "сушить", "draɪ", "драй"],
+  ["encourage", "encouraged", "encouraged", "поддерживать", "ɪnˈkɜːrɪdʒ", "инкё́ридж"],
+  ["enquire", "enquired", "enquired", "спрашивать", "ɪnˈkwaɪər", "инква́йэр"],
+  ["enter", "entered", "entered", "входить", "ˈentər", "э́нтэр"],
+  ["entertain", "entertained", "entertained", "развлекать", "ˌentərˈteɪn", "энтэртэ́йн"],
+  ["exercise", "exercised", "exercised", "тренироваться", "ˈeksərsaɪz", "э́ксэрсайз"],
+  ["exist", "existed", "existed", "существовать", "ɪɡˈzɪst", "игзи́ст"],
+  ["explain", "explained", "explained", "объяснять", "ɪkˈspleɪn", "экспле́йн"],
+  ["explore", "explored", "explored", "исследовать", "ɪkˈsplɔːr", "экспло́р"],
+  ["fail", "failed", "failed", "терпеть неудачу", "feɪl", "фэйл"],
+  ["fall", "fell", "fallen", "падать", "fɔːl", "фол"],
+  ["feed", "fed", "fed", "кормить", "fiːd", "фид"],
+  ["fight", "fought", "fought", "бороться", "faɪt", "файт"],
+  ["fill", "filled", "filled", "наполнять", "fɪl", "фил"],
+  ["finish", "finished", "finished", "заканчивать", "ˈfɪnɪʃ", "фи́ниш"],
+  ["fire", "fired", "fired", "увольнять", "ˈfaɪər", "фа́йэр"],
+  ["fit", "fitted", "fitted", "подходить", "fɪt", "фит"],
+  ["fix", "fixed", "fixed", "чинить", "fɪks", "фикс"],
+  ["fly", "flew", "flown", "летать", "flaɪ", "флай"],
+  ["follow", "followed", "followed", "следовать", "ˈfɒloʊ", "фо́лоу"],
+  ["forbid", "forbade", "forbidden", "запрещать", "fərˈbɪd", "фэрби́д"],
+  ["forgive", "forgave", "forgiven", "прощать", "fərˈɡɪv", "фэрги́в"],
+  ["freeze", "froze", "frozen", "замерзать", "friːz", "фриз"],
+  ["glow", "glowed", "glowed", "светиться", "ɡloʊ", "глоу"],
+  ["grind", "ground", "ground", "измельчать", "ɡraɪnd", "грайнд"],
+  ["grow", "grew", "grown", "расти", "ɡroʊ", "гроу"],
+  ["hang", "hung", "hung", "вешать", "hæŋ", "хэнг"],
+  ["hide", "hid", "hidden", "прятать", "haɪd", "хайд"],
+  ["hire", "hired", "hired", "нанимать", "haɪər", "ха́йэр"],
+  ["hiss", "hissed", "hissed", "шипеть", "hɪs", "хис"],
+  ["hit", "hit", "hit", "ударять", "hɪt", "хит"],
+  ["hope", "hoped", "hoped", "надеяться", "hoʊp", "хоуп"],
+  ["hurt", "hurt", "hurt", "причинять боль", "hɜːrt", "хёрт"],
+  ["improve", "improved", "improved", "улучшать", "ɪmˈpruːv", "импру́в"],
+  ["inform", "informed", "informed", "информировать", "ɪnˈfɔːrm", "инфо́рм"],
+  ["install", "installed", "installed", "устанавливать", "ɪnˈstɔːl", "инсто́л"],
+  ["interrupt", "interrupted", "interrupted", "прерывать", "ˌɪntəˈrʌpt", "интэра́пт"],
+  ["introduce", "introduced", "introduced", "представлять", "ˌɪntrəˈduːs", "интродью́с"],
+  ["join", "joined", "joined", "присоединяться", "dʒɔɪn", "джойн"],
+  ["juggle", "juggled", "juggled", "жонглировать", "ˈdʒʌɡəl", "джа́гэл"],
+  ["kill", "killed", "killed", "убивать", "kɪl", "кил"],
+  ["knock", "knocked", "knocked", "стучать", "nɒk", "нок"],
+  ["last", "lasted", "lasted", "длиться", "læst", "лэст"],
+  ["laugh", "laughed", "laughed", "смеяться", "læf", "лэф"],
+  ["lay", "laid", "laid", "класть", "leɪ", "лэй"],
+  ["lead", "led", "led", "вести", "liːd", "лид"],
+  ["lend", "lent", "lent", "одалживать", "lend", "лэнд"],
+  ["lie", "lay", "lain", "лежать", "laɪ", "лай"],
+  ["load", "loaded", "loaded", "загружать", "loʊd", "лоуд"],
+  ["lose", "lost", "lost", "терять", "luːz", "луз"],
+  ["marry", "married", "married", "жениться", "ˈmæri", "мэ́ри"],
+  ["mean", "meant", "meant", "означать", "miːn", "мин"],
+  ["miss", "missed", "missed", "скучать", "mɪs", "мис"],
+  ["move", "moved", "moved", "двигаться", "muːv", "мув"],
+  ["nod", "nodded", "nodded", "кивать", "nɒd", "нод"],
+  ["notice", "noticed", "noticed", "замечать", "ˈnoʊtɪs", "но́утис"],
+  ["organise", "organised", "organised", "организовывать", "ˈɔːrɡənaɪz", "о́ргэнайз"],
+  ["own", "owned", "owned", "владеть", "oʊn", "оун"],
+  ["pack", "packed", "packed", "упаковывать", "pæk", "пэк"],
+  ["panic", "panicked", "panicked", "паниковать", "ˈpænɪk", "пэ́ник"],
+  ["pass", "passed", "passed", "проходить", "pæs", "пэс"],
+  ["persuade", "persuaded", "persuaded", "убеждать", "pərˈsweɪd", "пэрсвэ́йд"],
+  ["pick", "picked", "picked", "подбирать", "pɪk", "пик"],
+  ["prefer", "preferred", "preferred", "предпочитать", "prɪˈfɜːr", "прифё́р"],
+  ["prepare", "prepared", "prepared", "готовить", "prɪˈpeər", "припэ́р"],
+  ["prevent", "prevented", "prevented", "предотвращать", "prɪˈvent", "привэ́нт"],
+  ["protect", "protected", "protected", "защищать", "prəˈtekt", "протэ́кт"],
+  ["prove", "proved", "proved", "доказывать", "pruːv", "прув"],
+  ["pull", "pulled", "pulled", "тянуть", "pʊl", "пул"],
+  ["quit", "quit", "quit", "увольняться", "kwɪt", "квит"],
+  ["raise", "raised", "raised", "поднимать", "reɪz", "рэйз"],
+  ["realize", "realized", "realized", "осознавать", "ˈriːəlaɪz", "ри́элайз"],
+  ["receive", "received", "received", "получать", "rɪˈsiːv", "риси́в"],
+  ["recognize", "recognized", "recognized", "узнавать", "ˈrekəɡnaɪz", "рэ́кэгнайз"],
+  ["recommend", "recommended", "recommended", "рекомендовать", "ˌrekəˈmend", "рэкомэ́нд"],
+  ["recover", "recovered", "recovered", "выздоравливать", "rɪˈkʌvər", "рика́вэр"],
+  ["reduce", "reduced", "reduced", "уменьшать", "rɪˈduːs", "риду́с"],
+  ["refuse", "refused", "refused", "отказываться", "rɪˈfjuːz", "рифью́з"],
+  ["relax", "relaxed", "relaxed", "расслабляться", "rɪˈlæks", "рилэ́кс"],
+  ["remind", "reminded", "reminded", "напоминать", "rɪˈmaɪnd", "римай́нд"],
+  ["rent", "rented", "rented", "арендовать", "rent", "рэнт"],
+  ["repair", "repaired", "repaired", "ремонтировать", "rɪˈpeər", "рипэ́р"],
+  ["replace", "replaced", "replaced", "заменять", "rɪˈpleɪs", "риплэ́йс"],
+  ["reply", "replied", "replied", "отвечать", "rɪˈplaɪ", "рипла́й"],
+  ["request", "requested", "requested", "запрашивать", "rɪˈkwest", "риквэ́ст"],
+  ["require", "required", "required", "требовать", "rɪˈkwaɪər", "риква́йэр"],
+  ["rescue", "rescued", "rescued", "спасать", "ˈreskjuː", "рэ́скью"],
+  ["restart", "restarted", "restarted", "перезапускать", "ˌriːˈstɑːrt", "риста́рт"],
+  ["return", "returned", "returned", "возвращать", "rɪˈtɜːrn", "итёрн"],
+  ["rinse", "rinsed", "rinsed", "ополаскивать", "rɪns", "ринс"],
+  ["rise", "rose", "risen", "подниматься", "raɪz", "райз"],
+  ["sell", "sold", "sold", "продавать", "sel", "сэл"],
+  ["serve", "served", "served", "обслуживать", "sɜːrv", "сёрв"],
+  ["settle", "settled", "settled", "обосноваться", "ˈsetəl", "сэ́тэл"],
+  ["shake", "shook", "shaken", "трясти", "ʃeɪk", "шэйк"],
+  ["shine", "shone", "shone", "сиять", "ʃaɪn", "шайн"],
+  ["shoot", "shot", "shot", "стрелять", "ʃuːt", "шут"],
+  ["shout", "shouted", "shouted", "кричать", "ʃaʊt", "шаут"],
+  ["sing", "sang", "sung", "петь", "sɪŋ", "синг"],
+  ["sink", "sank", "sunk", "тонуть", "sɪŋk", "синк"],
+  ["ski", "skied", "skied", "кататься на лыжах", "skiː", "ски"],
+  ["slide", "slid", "slid", "скользить", "slaɪd", "слайд"],
+  ["solve", "solved", "solved", "решать", "sɒlv", "солв"],
+  ["spend", "spent", "spent", "тратить", "spend", "спэнд"],
+  ["spill", "spilt", "spilt", "проливать", "spɪl", "спил"],
+  ["splash", "splashed", "splashed", "брызгать", "splæʃ", "сплэш"],
+  ["spread", "spread", "spread", "распространять", "spred", "спрэд"],
+  ["steal", "stole", "stolen", "красть", "stiːl", "стил"],
+  ["submit", "submitted", "submitted", "отправлять", "səbˈmɪt", "сабми́т"],
+  ["succeed", "succeeded", "succeeded", "преуспевать", "səkˈsiːd", "сакси́д"],
+  ["suggest", "suggested", "suggested", "предлагать", "səɡˈdʒest", "сагджэ́ст"],
+  ["sweep", "swept", "swept", "мести", "swiːp", "свип"],
+  ["swim", "swam", "swum", "плавать", "swɪm", "свим"],
+  ["swear", "swore", "sworn", "ругаться", "swer", "свэр"],
+  ["tear", "tore", "torn", "рвать", "ter", "тэр"],
+  ["tempt", "tempted", "tempted", "искушать", "tempt", "тэмпт"],
+  ["thank", "thanked", "thanked", "благодарить", "θæŋk", "сэнк"],
+  ["throw", "threw", "thrown", "бросать", "θroʊ", "сроу"],
+  ["tidy", "tidied", "tidied", "убирать", "ˈtaɪdi", "та́йди"],
+  ["treat", "treated", "treated", "лечить", "triːt", "трит"],
+  ["unload", "unloaded", "unloaded", "разгружать", "ʌnˈloʊd", "анло́уд"],
+  ["unlock", "unlocked", "unlocked", "отпирать", "ʌnˈlɒk", "анло́к"],
+  ["warn", "warned", "warned", "предупреждать", "wɔːrn", "уорн"],
+  ["waste", "wasted", "wasted", "тратить впустую", "weɪst", "уэйст"],
+  ["weigh", "weighed", "weighed", "весить", "weɪ", "уэй"],
+  ["welcome", "welcomed", "welcomed", "приветствовать", "ˈwelkəm", "уэ́лкэм"],
+  ["wipe", "wiped", "wiped", "вытирать", "waɪp", "вайп"],
+  ["win", "won", "won", "побеждать", "wɪn", "вин"],
+  ["wonder", "wondered", "wondered", "интересоваться", "ˈwʌndər", "уо́ндэр"],
+  ["afford", "afforded", "afforded", "позволить себе (финансово)", "əˈfɔːrd", "эфо́рд"],
+  ["apply for", "applied for", "applied for", "подавать заявление на", "əˈplaɪ fɔːr", "эпла́й фор"],
+  ["appear", "appeared", "appeared", "появляться", "əˈpɪər", "эпи́р"],
+  ["boost", "boosted", "boosted", "усилить, продвинуть", "buːst", "буст"],
+  ["disappear", "disappeared", "disappeared", "исчезнуть", "ˌdɪsəˈpɪər", "дисэпи́р"],
+  ["earn", "earned", "earned", "зарабатывать", "ɜːrn", "ёрн"],
+  ["extend", "extended", "extended", "продлить", "ɪkˈstend", "икстэ́нд"],
+  ["gain", "gained", "gained", "набирать, получать", "ɡeɪn", "гэйн"],
+  ["hack", "hacked", "hacked", "взломать", "hæk", "хэк"],
+  ["hire", "hired", "hired", "нанимать", "haɪər", "ха́йэр"],
+  ["ignore", "ignored", "ignored", "игнорировать", "ɪɡˈnɔːr", "игно́р"],
+  ["inspire", "inspired", "inspired", "вдохновлять", "ɪnˈspaɪər", "инспа́йэр"],
+  ["interact", "interacted", "interacted", "взаимодействовать", "ˌɪntərˈækt", "интэрэ́кт"],
+  ["invest", "invested", "invested", "инвестировать", "ɪnˈvest", "инвэ́ст"],
+  ["launch", "launched", "launched", "запускать", "lɔːntʃ", "лонч"],
+  ["mention", "mentioned", "mentioned", "упоминать", "ˈmenʃən", "мэ́ншэн"],
+  ["negotiate", "negotiated", "negotiated", "договариваться", "nɪˈɡoʊʃieɪt", "ниго́ушиэйт"],
+  ["overshare", "overshared", "overshared", "делиться слишком личным", "ˌoʊvərˈʃer", "оувэрше́р"],
+  ["participate", "participated", "participated", "участвовать", "pɑːrˈtɪsɪpeɪt", "парти́сипэйт"],
+  ["postpone", "postponed", "postponed", "откладывать", "poʊstˈpoʊn", "поустпо́ун"],
+  ["pretend", "pretended", "pretended", "притворяться", "prɪˈtend", "притэ́нд"],
+  ["provide", "provided", "provided", "предоставлять", "prəˈvaɪd", "провайд"],
+  ["react", "reacted", "reacted", "реагировать", "riˈækt", "риэ́кт"],
+  ["register", "registered", "registered", "зарегистрироваться", "ˈredʒɪstər", "рэ́джистэр"],
+  ["scroll", "scrolled", "scrolled", "листать (ленту)", "skroʊl", "скроул"],
+  ["sign up", "signed up", "signed up", "зарегистрироваться", "saɪn ʌp", "сайн ап"],
+  ["stalk", "stalked", "stalked", "следить за кем-то онлайн", "stɔːk", "сток"],
+  ["switch", "switched", "switched", "переключаться, менять", "swɪtʃ", "свич"],
+  ["tag", "tagged", "tagged", "отмечать (в соцсетях)", "tæɡ", "тэг"],
+  ["trade", "traded", "traded", "торговать", "treɪd", "трэйд"],
+  ["unfollow", "unfollowed", "unfollowed", "отписаться", "ʌnˈfɒloʊ", "анфо́лоу"],
+  ["withdraw", "withdrew", "withdrawn", "снимать деньги", "wɪðˈdrɔː", "уиздро́"],
+  ["yawn", "yawned", "yawned", "зевать", "jɔːn", "йон"],
+];
+const ADJS = [
+  ["advanced", "продвинутый", "ədˈvænst", "эдвэ́нст"],
+  ["amazed", "поражённый", "əˈmeɪzd", "эмэ́йзд"],
+  ["amazing", "удивительный", "əˈmeɪzɪŋ", "эмэ́йзинг"],
+  ["anxious", "тревожный", "ˈæŋkʃəs", "э́нкшэс"],
+  ["appropriate", "подходящий", "əˈproʊpriɪt", "эпро́уприит"],
+  ["ashamed", "пристыженный", "əˈʃeɪmd", "эше́ймд"],
+  ["astonished", "изумлённый", "əˈstɒnɪʃt", "эсто́ништ"],
+  ["attractive", "привлекательный", "əˈtræktɪv", "этрэ́ктив"],
+  ["awful", "ужасный", "ˈɔːfəl", "о́фэл"],
+  ["awkward", "неловкий", "ˈɔːkwərd", "о́квэрд"],
+  ["brave", "смелый", "breɪv", "брэйв"],
+  ["careful", "осторожный", "ˈkeərfəl", "кэ́рфэл"],
+  ["challenging", "сложный", "ˈtʃælɪndʒɪŋ", "чэ́линджинг"],
+  ["cheerful", "жизнерадостный", "ˈtʃɪərfəl", "чи́рфэл"],
+  ["childish", "детский", "ˈtʃaɪldɪʃ", "ча́йлдиш"],
+  ["cloudy", "облачный", "ˈklaʊdi", "кла́уди"],
+  ["comfortable", "комфортный", "ˈkʌmfərtəbəl", "ка́мфортэбэл"],
+  ["confident", "уверенный", "ˈkɒnfɪdənt", "ко́нфидэнт"],
+  ["confused", "запутавшийся", "kənˈfjuːzd", "конфью́зд"],
+  ["confusing", "запутанный", "kənˈfjuːzɪŋ", "конфью́зинг"],
+  ["convenient", "удобный", "kənˈviːniənt", "конви́ниэнт"],
+  ["crowded", "многолюдный", "ˈkraʊdɪd", "кра́удид"],
+  ["curious", "любопытный", "ˈkjʊəriəs", "кью́риэс"],
+  ["dangerous", "опасный", "ˈdeɪndʒərəs", "дэ́йнджэрэс"],
+  ["delighted", "восхищённый", "dɪˈlaɪtɪd", "дила́йтид"],
+  ["disappointed", "разочарованный", "ˌdɪsəˈpɔɪntɪd", "дисэпо́йнтид"],
+  ["disappointing", "разочаровывающий", "ˌdɪsəˈpɔɪntɪŋ", "дисэпо́йнтинг"],
+  ["embarrassed", "смущённый", "ɪmˈbærəst", "имбэ́рэст"],
+  ["embarrassing", "смущающий", "ɪmˈbærəsɪŋ", "имбэ́рэсинг"],
+  ["enormous", "огромный", "ɪˈnɔːrməs", "ино́рмэс"],
+  ["essential", "необходимый", "ɪˈsenʃəl", "исэ́ншэл"],
+  ["excited", "взволнованный", "ɪkˈsaɪtɪd", "икса́йтид"],
+  ["exciting", "захватывающий", "ɪkˈsaɪtɪŋ", "икса́йтинг"],
+  ["famous", "известный", "ˈfeɪməs", "фэ́ймэс"],
+  ["fortunate", "удачливый", "ˈfɔːrtʃənɪt", "фо́рчэнит"],
+  ["frightened", "испуганный", "ˈfraɪtənd", "фра́йтэнд"],
+  ["frightening", "пугающий", "ˈfraɪtənɪŋ", "фра́йтэнинг"],
+  ["generous", "щедрый", "ˈdʒenərəs", "джэ́нэрэс"],
+  ["girlish", "девчачий", "ˈɡɜːrlɪʃ", "гёрлиш"],
+  ["grateful", "благодарный", "ˈɡreɪtfəl", "грэ́йтфэл"],
+  ["greyish", "сероватый", "ˈɡreɪɪʃ", "грэ́йиш"],
+  ["helpful", "полезный", "ˈhelpfəl", "хэ́лпфэл"],
+  ["honest", "честный", "ˈɒnɪst", "о́нист"],
+  ["impressed", "впечатлённый", "ɪmˈprest", "импрэ́ст"],
+  ["impressive", "впечатляющий", "ɪmˈpresɪv", "импрэ́сив"],
+  ["independent", "независимый", "ˌɪndɪˈpendənt", "индипэ́ндэнт"],
+  ["interested", "заинтересованный", "ˈɪntrɪstɪd", "и́нтрэстид"],
+  ["jealous", "ревнивый", "ˈdʒeləs", "джэ́лэс"],
+  ["lonely", "одинокий", "ˈloʊnli", "ло́унли"],
+  ["narrow", "узкий", "ˈnæroʊ", "нэ́роу"],
+  ["nervous", "нервный", "ˈnɜːrvəs", "нёрвэс"],
+  ["ordinary", "обычный", "ˈɔːrdɪneri", "о́рдинэри"],
+  ["patient", "терпеливый", "ˈpeɪʃənt", "пэ́йшэнт"],
+  ["peaceful", "спокойный", "ˈpiːsfəl", "пи́сфэл"],
+  ["pleased", "довольный", "pliːzd", "плизд"],
+  ["polite", "вежливый", "pəˈlaɪt", "пола́йт"],
+  ["precious", "ценный", "ˈpreʃəs", "прэ́шэс"],
+  ["proud", "гордый", "praʊd", "прауд"],
+  ["relaxed", "расслабленный", "rɪˈlækst", "рилэ́кст"],
+  ["relaxing", "расслабляющий", "rɪˈlæksɪŋ", "рилэ́ксинг"],
+  ["reliable", "надёжный", "rɪˈlaɪəbəl", "рила́йэбэл"],
+  ["relieved", "испытавший облегчение", "rɪˈliːvd", "рили́вд"],
+  ["responsible", "ответственный", "rɪˈspɒnsɪbəl", "риспо́нсибэл"],
+  ["satisfied", "удовлетворённый", "ˈsætɪsfaɪd", "сэ́тисфайд"],
+  ["sensitive", "чувствительный", "ˈsensɪtɪv", "сэ́нситив"],
+  ["serious", "серьёзный", "ˈsɪəriəs", "си́риэс"],
+  ["shiny", "блестящий", "ˈʃaɪni", "ша́йни"],
+  ["shocked", "шокированный", "ʃɒkt", "шокт"],
+  ["shocking", "шокирующий", "ˈʃɒkɪŋ", "шо́кинг"],
+  ["shy", "застенчивый", "ʃaɪ", "шай"],
+  ["similar", "похожий", "ˈsɪmɪlər", "си́милэр"],
+  ["slippery", "скользкий", "ˈslɪpəri", "сли́пэри"],
+  ["stressful", "стрессовый", "ˈstresfəl", "стрэ́сфэл"],
+  ["successful", "успешный", "səkˈsesfəl", "саксэ́сфэл"],
+  ["surprised", "удивлённый", "sərˈpraɪzd", "сэрпра́йзд"],
+  ["surprising", "удивительный", "sərˈpraɪzɪŋ", "сэрпра́йзинг"],
+  ["terrified", "напуганный", "ˈterɪfaɪd", "тэ́рифайд"],
+  ["thoughtful", "вдумчивый", "ˈθɔːtfəl", "со́тфэл"],
+  ["uncomfortable", "некомфортный", "ʌnˈkʌmfərtəbəl", "анка́мфортэбэл"],
+  ["unusual", "необычный", "ʌnˈjuːʒuəl", "анью́жуэл"],
+  ["useful", "полезный", "ˈjuːsfəl", "ю́сфэл"],
+  ["weird", "странный", "wɪərd", "виэрд"],
+  ["worried", "обеспокоенный", "ˈwɜːrid", "уёрид"],
+  ["worrying", "вызывающий беспокойство", "ˈwɜːriɪŋ", "уёриинг"],
+  ["addicted", "зависимый", "əˈdɪktɪd", "эди́ктид"],
+  ["bitter", "горький", "ˈbɪtər", "би́тэр"],
+  ["cashless", "безналичный", "ˈkæʃlɪs", "кэ́шлис"],
+  ["digital", "цифровой", "ˈdɪdʒɪtəl", "ди́джитэл"],
+  ["empathetic", "эмпатичный", "ˌempəˈθetɪk", "эмпэсэ́тик"],
+  ["inconvenient", "неудобный", "ˌɪnkənˈviːniənt", "инконви́ниэнт"],
+  ["infected", "заражённый", "ɪnˈfektɪd", "инфэ́ктид"],
+  ["laid-back", "расслабленный, непринуждённый", "ˌleɪdˈbæk", "лэйдбэ́к"],
+  ["legal", "юридический, законный", "ˈliːɡəl", "ли́гэл"],
+  ["outdated", "устаревший", "ˌaʊtˈdeɪtɪd", "аутдэ́йтид"],
+  ["pregnant", "беременная", "ˈpreɡnənt", "прэ́гнэнт"],
+  ["profitable", "прибыльный", "ˈprɒfɪtəbəl", "про́фитэбэл"],
+  ["reckless", "безрассудный", "ˈreklɪs", "рэ́клис"],
+  ["risky", "рискованный", "ˈrɪski", "ри́ски"],
+  ["stray", "бродячий", "streɪ", "стрэй"],
+  ["touching", "трогательный", "ˈtʌtʃɪŋ", "та́чинг"],
+  ["trending", "в тренде, популярный", "ˈtrendɪŋ", "трэ́ндинг"],
+  ["unacceptable", "неприемлемый", "ˌʌnəkˈseptəbəl", "анэксэ́птэбэл"],
+  ["urgent", "срочный", "ˈɜːrdʒənt", "ёрджэнт"],
+  ["volatile", "нестабильный, волатильный", "ˈvɒlətaɪl", "во́лэтайл"],
+];
+const NOUNS = [
+  ["ability", "способность", "əˈbɪlɪti", "эби́лити"],
+  ["accident", "несчастный случай", "ˈæksɪdənt", "э́ксидэнт"],
+  ["accommodation", "жильё", "əˌkɒməˈdeɪʃən", "экомэдэ́йшэн"],
+  ["ache", "боль", "eɪk", "эйк"],
+  ["achievement", "достижение", "əˈtʃiːvmənt", "эчи́вмэнт"],
+  ["acquaintance", "знакомый", "əˈkweɪntəns", "эквэ́йнтэнс"],
+  ["address", "адрес", "ˈædres", "э́дрэс"],
+  ["admiration", "восхищение", "ˌædməˈreɪʃən", "эдмирэ́йшэн"],
+  ["adventure", "приключение", "ədˈventʃər", "эдвэ́нчэр"],
+  ["advertising", "реклама", "ˈædvərtaɪzɪŋ", "э́двэртайзинг"],
+  ["advice", "совет", "ədˈvaɪs", "эдва́йс"],
+  ["age", "возраст", "eɪdʒ", "эйдж"],
+  ["agency", "агентство", "ˈeɪdʒənsi", "э́йджэнси"],
+  ["agenda", "повестка", "əˈdʒendə", "эджэ́ндэ"],
+  ["airplane", "самолёт", "ˈerpleɪn", "э́рплэйн"],
+  ["airport", "аэропорт", "ˈerpɔːrt", "э́рпорт"],
+  ["allergy", "аллергия", "ˈælərɡi", "э́лэрджи"],
+  ["allergy medicine", "лекарство от аллергии", "ˈælərɡi ˈmedɪsɪn", "э́лэрджи мэ́дисин"],
+  ["antibiotic", "антибиотик", "ˌæntɪbaɪˈɒtɪk", "энтибайо́тик"],
+  ["anxiety", "тревожность", "æŋˈzaɪɪti", "энгза́йити"],
+  ["apartment complex", "жилой комплекс", "əˈpɑːrtmənt ˈkɒmpleks", "эпа́ртмэнт ко́мплекс"],
+  ["app", "приложение", "æp", "эп"],
+  ["appliance", "бытовой прибор", "əˈplaɪəns", "эпла́йэнс"],
+  ["applicant", "кандидат", "ˈæplɪkənt", "э́пликэнт"],
+  ["application", "приложение", "ˌæplɪˈkeɪʃən", "эпликэ́йшэн"],
+  ["appointment", "запись, приём", "əˈpɔɪntmənt", "эпо́йнтмэнт"],
+  ["artist", "художник", "ˈɑːrtɪst", "а́ртист"],
+  ["attention", "внимание", "əˈtenʃən", "этэ́ншэн"],
+  ["avalanche", "лавина", "ˈævəlæntʃ", "э́вэлэнч"],
+  ["balcony", "балкон", "ˈbælkəni", "бэ́лкэни"],
+  ["bandage", "бинт, повязка", "ˈbændɪdʒ", "бэ́ндидж"],
+  ["bank card", "банковская карта", "bæŋk kɑːrd", "бэнк кард"],
+  ["battery", "батарея, аккумулятор", "ˈbætəri", "бэ́тэри"],
+  ["behavior", "поведение", "bɪˈheɪvjər", "бихэ́йвйэр"],
+  ["beta version", "бета-версия", "ˈbeɪtə ˈvɜːrʒən", "бэ́йтэ вёржэн"],
+  ["bleach", "отбеливатель", "bliːtʃ", "блич"],
+  ["block of flats", "многоквартирный дом", "blɒk əv flæts", "блок эв флэтс"],
+  ["blocked nose", "заложенный нос", "blɒkt noʊz", "блокт ноуз"],
+  ["blood pressure", "кровяное давление", "blʌd ˈpreʃər", "блад прэ́шэр"],
+  ["broom", "веник", "bruːm", "брум"],
+  ["brush", "щётка", "brʌʃ", "браш"],
+  ["bucket", "ведро", "ˈbʌkɪt", "ба́кит"],
+  ["builder", "строитель", "ˈbɪldər", "би́лдэр"],
+  ["bunch", "несколько, кучка", "bʌntʃ", "банч"],
+  ["business trip", "командировка", "ˈbɪznɪs trɪp", "би́знис трип"],
+  ["button", "кнопка", "ˈbʌtən", "ба́тэн"],
+  ["cabinet", "шкафчик", "ˈkæbɪnɪt", "кэ́бинит"],
+  ["camera", "камера", "ˈkæmərə", "кэ́мэрэ"],
+  ["carrier", "перевозчик", "ˈkæriər", "кэ́риэр"],
+  ["case", "чехол", "keɪs", "кэйс"],
+  ["cash", "наличные", "kæʃ", "кэш"],
+  ["cash desk", "касса", "kæʃ desk", "кэш дэск"],
+  ["castle", "замок", "ˈkæsəl", "кэ́сэл"],
+  ["celebration", "празднование", "ˌselɪˈbreɪʃən", "селибрэ́йшэн"],
+  ["central heating", "центральное отопление", "ˈsentrəl ˈhiːtɪŋ", "сэ́нтрэл хи́тинг"],
+  ["certificate", "справка, сертификат", "sərˈtɪfɪkɪt", "сэрти́фикит"],
+  ["certificate of criminal record", "справка о несудимости", "sərˈtɪfɪkɪt əv ˈkrɪmɪnəl ˈrekərd", "сэрти́фикит эв кри́минэл рэ́корд"],
+  ["change", "изменение", "tʃeɪndʒ", "чейндж"],
+  ["charger", "зарядное устройство", "ˈtʃɑːrdʒər", "ча́рджэр"],
+  ["chicken", "курица", "ˈtʃɪkɪn", "чи́кин"],
+  ["cleaning service", "клининговая услуга", "ˈkliːnɪŋ ˈsɜːrvɪs", "кли́нинг сёрвис"],
+  ["client", "клиент", "ˈklaɪənt", "кла́йэнт"],
+  ["cloth", "тряпка", "klɒθ", "клос"],
+  ["clue", "улика, подсказка", "kluː", "клу"],
+  ["coach", "междугородний автобус", "koʊtʃ", "коутч"],
+  ["colleague", "коллега", "ˈkɒliːɡ", "ко́лиг"],
+  ["collector", "коллекционер", "kəˈlektər", "колэ́ктэр"],
+  ["community", "сообщество", "kəˈmjuːnɪti", "комью́нити"],
+  ["company", "компания", "ˈkʌmpəni", "ка́мпэни"],
+  ["competition", "соревнование, конкурс", "ˌkɒmpɪˈtɪʃən", "компити́шэн"],
+  ["concept", "концепция", "ˈkɒnsept", "ко́нсэпт"],
+  ["conference", "конференция", "ˈkɒnfərəns", "ко́нфэрэнс"],
+  ["confidence", "уверенность", "ˈkɒnfɪdəns", "ко́нфидэнс"],
+  ["conflict", "конфликт", "ˈkɒnflɪkt", "ко́нфликт"],
+  ["connection", "связь, соединение", "kəˈnekʃən", "конэ́кшэн"],
+  ["construction site", "стройка", "kənˈstrʌkʃən saɪt", "констра́кшэн сайт"],
+  ["contact", "контакт", "ˈkɒntækt", "ко́нтэкт"],
+  ["content", "контент", "ˈkɒntent", "ко́нтэнт"],
+  ["contest", "конкурс", "ˈkɒntest", "ко́нтэст"],
+  ["contract", "договор", "ˈkɒntrækt", "ко́нтрэкт"],
+  ["cost", "стоимость", "kɒst", "кост"],
+  ["costume", "костюм", "ˈkɒstjuːm", "ко́стьюм"],
+  ["cough", "кашель", "kɒf", "коф"],
+  ["cough syrup", "сироп от кашля", "kɒf ˈsɪrəp", "коф си́рэп"],
+  ["cousin", "двоюродный брат/сестра", "ˈkʌzɪn", "ка́зин"],
+  ["crowd", "толпа", "kraʊd", "крауд"],
+  ["crown", "корона", "kraʊn", "краун"],
+  ["cuisine", "кухня, национальная кухня", "kwɪˈziːn", "квизи́н"],
+  ["cupboard", "шкаф для посуды", "ˈkʌbərd", "ка́бэрд"],
+  ["curiosity", "любопытство", "ˌkjʊəriˈɒsɪti", "кьюриосити"],
+  ["customer", "клиент, покупатель", "ˈkʌstəmər", "ка́стэмэр"],
+  ["customs", "таможня", "ˈkʌstəmz", "ка́стэмз"],
+  ["data", "данные", "ˈdeɪtə", "дэ́йтэ"],
+  ["deadline", "дедлайн, крайний срок", "ˈdedlaɪn", "дэ́длайн"],
+  ["decision", "решение, выбор", "dɪˈsɪʒən", "диси́жэн"],
+  ["deer", "олень", "dɪər", "диэр"],
+  ["definition", "определение", "ˌdefɪˈnɪʃən", "дефини́шэн"],
+  ["dehumidifier", "осушитель воздуха", "diːhjuːˈmɪdɪfaɪər", "дихьюми́дифайэр"],
+  ["delay", "задержка", "dɪˈleɪ", "дилэ́й"],
+  ["deposit", "депозит", "dɪˈpɒzɪt", "депо́зит"],
+  ["design", "дизайн", "dɪˈzaɪn", "диза́йн"],
+  ["dessert", "десерт", "dɪˈzɜːrt", "дизёрт"],
+  ["destination", "место назначения", "ˌdestɪˈneɪʃən", "дэстинэ́йшэн"],
+  ["detail", "деталь", "ˈdiːteɪl", "ди́тэйл"],
+  ["detective", "детектив", "dɪˈtektɪv", "детэ́ктив"],
+  ["detergent", "моющее средство", "dɪˈtɜːrdʒənt", "дитёрджэнт"],
+  ["developer", "разработчик", "dɪˈveləpər", "дивэ́лэпэр"],
+  ["director", "директор", "dɪˈrektər", "дирэ́ктэр"],
+  ["dishwasher", "посудомоечная машина", "ˈdɪʃwɒʃər", "ди́шуошэр"],
+  ["dizziness", "головокружение", "ˈdɪzɪnɪs", "ди́зинис"],
+  ["document", "документ", "ˈdɒkjəmənt", "до́кьюмэнт"],
+  ["dustpan", "совок", "ˈdʌstpæn", "да́стпэн"],
+  ["earthquake", "землетрясение", "ˈɜːrθkweɪk", "ёрскуэйк"],
+  ["embankment", "набережная", "ɪmˈbæŋkmənt", "имбэ́нкмэнт"],
+  ["emergency", "экстренная ситуация", "ɪˈmɜːrdʒənsi", "имёрджэнси"],
+  ["employer", "работодатель", "ɪmˈplɔɪər", "импло́йэр"],
+  ["entrepreneur", "предприниматель", "ˌɒntrəprəˈnɜːr", "онтрэпрэнёр"],
+  ["envelope", "конверт", "ˈenvəloʊp", "э́нвэлоуп"],
+  ["event organizer", "организатор мероприятия", "ɪˈvent ˈɔːrɡənaɪzər", "ивэ́нт о́ргэнайзэр"],
+  ["exam", "экзамен", "ɪɡˈzæm", "игзэ́м"],
+  ["examiner", "экзаменатор", "ɪɡˈzæmɪnər", "игзэ́минэр"],
+  ["excitement", "воодушевление", "ɪkˈsaɪtmənt", "икса́йтмэнт"],
+  ["exhibition", "выставка", "ˌeksɪˈbɪʃən", "эксиби́шэн"],
+  ["exit", "съезд, выход", "ˈeksɪt", "э́ксит"],
+  ["experience", "опыт", "ɪkˈspɪəriəns", "иксп́ириэнс"],
+  ["fabric softener", "кондиционер для белья", "ˈfæbrɪk ˈsɒfənər", "фэ́брик со́фэнэр"],
+  ["facade", "фасад", "fəˈsɑːd", "фэса́д"],
+  ["facade net", "фасадная сетка", "fəˈsɑːd net", "фэса́д нэт"],
+  ["fair", "ярмарка", "fer", "фэр"],
+  ["fairy", "фея", "ˈfeəri", "фэ́ри"],
+  ["fairy tale", "сказка", "ˈfeəri teɪl", "фэ́ри тэйл"],
+  ["fear", "страх", "fɪər", "фиэр"],
+  ["feedback", "обратная связь", "ˈfiːdbæk", "фи́дбэк"],
+  ["fever", "жар, температура", "ˈfiːvər", "фи́вэр"],
+  ["fire", "пожар", "ˈfaɪər", "фа́йэр"],
+  ["firefighter", "пожарный", "ˈfaɪərfaɪtər", "фа́йэрфайтэр"],
+  ["flight", "рейс", "flaɪt", "флайт"],
+  ["flu", "грипп", "fluː", "флу"],
+  ["forest", "лес", "ˈfɒrɪst", "фо́рист"],
+  ["fox", "лиса", "fɒks", "фокс"],
+  ["frame", "рама", "freɪm", "фрэйм"],
+  ["freezer", "морозилка", "ˈfriːzər", "фри́зэр"],
+  ["fridge", "холодильник", "frɪdʒ", "фридж"],
+  ["gallery", "галерея", "ˈɡæləri", "гэ́лэри"],
+  ["gloves", "перчатки", "ɡlʌvz", "главз"],
+  ["goal", "цель", "ɡoʊl", "гоул"],
+  ["goose", "гусь", "ɡuːs", "гус"],
+  ["guard", "охранник, стражник", "ɡɑːrd", "гард"],
+  ["guest", "гость", "ɡest", "гэст"],
+  ["gym", "спортзал", "dʒɪm", "джим"],
+  ["habit", "привычка", "ˈhæbɪt", "хэ́бит"],
+  ["handle", "ручка", "ˈhændəl", "хэ́ндэл"],
+  ["hangover", "похмелье", "ˈhæŋoʊvər", "хэ́нговэр"],
+  ["happiness", "счастье", "ˈhæpɪnɪs", "хэ́пинис"],
+  ["headache", "головная боль", "ˈhedeɪk", "хэ́дэйк"],
+  ["headphones", "наушники", "ˈhedfоʊnz", "хэ́дфоунз"],
+  ["health insurance", "медицинская страховка", "helθ ɪnˈʃʊərəns", "хэлс иншу́рэнс"],
+  ["hen", "курица", "hen", "хэн"],
+  ["hill", "холм", "hɪl", "хил"],
+  ["idea", "идея", "aɪˈdɪə", "айди́э"],
+  ["illness", "болезнь", "ˈɪlnɪs", "и́лнис"],
+  ["immigration center", "иммиграционный центр", "ˌɪmɪˈɡreɪʃən ˈsentər", "имигрэ́йшэн сэ́нтэр"],
+  ["information", "информация", "ˌɪnfərˈmeɪʃən", "инфэрмэ́йшэн"],
+  ["ingredient", "ингредиент", "ɪnˈɡriːdiənt", "ингри́диэнт"],
+  ["injury", "травма", "ˈɪndʒəri", "и́нджэри"],
+  ["interface", "интерфейс", "ˈɪntərfeɪs", "и́нтэрфэйс"],
+  ["interior", "интерьер", "ɪnˈtɪəriər", "инти́риэр"],
+  ["investor", "инвестор", "ɪnˈvestər", "инвэ́стэр"],
+  ["invoice", "счёт", "ˈɪnvɔɪs", "и́нвойс"],
+  ["journal", "дневник", "ˈdʒɜːrnəl", "джёрнэл"],
+  ["journalist", "журналист", "ˈdʒɜːrnəlɪst", "джёрнэлист"],
+  ["kingdom", "королевство", "ˈkɪŋdəm", "ки́нгдэм"],
+  ["kitchen cabinet", "кухонный шкаф", "ˈkɪtʃɪn ˈkæbɪnɪt", "ки́чин кэ́бинит"],
+  ["knowledge", "знание", "ˈnɒlɪdʒ", "но́лидж"],
+  ["landlord", "арендодатель", "ˈlændlɔːrd", "лэ́ндлорд"],
+  ["launch", "запуск", "lɔːntʃ", "лонч"],
+  ["laundry", "стирка, бельё", "ˈlɔːndri", "ло́ндри"],
+  ["lawyer", "юрист", "ˈlɔɪər", "ло́йэр"],
+  ["layover", "пересадка", "ˈleɪoʊvər", "лэ́йоувэр"],
+  ["leaf", "лист", "liːf", "лиф"],
+  ["leftovers", "остатки еды", "ˈleftоʊvərz", "лэ́фтоувэрз"],
+  ["legend", "легенда", "ˈledʒənd", "лэ́джэнд"],
+  ["lesson", "урок", "ˈlesən", "лэ́сэн"],
+  ["lifestyle", "образ жизни", "ˈlaɪfstaɪl", "ла́йфстайл"],
+  ["line", "линия связи", "laɪn", "лайн"],
+  ["llama", "лама", "ˈlɑːmə", "ла́мэ"],
+  ["load", "много, куча", "loʊd", "лоуд"],
+  ["magic wand", "волшебная палочка", "ˈmædʒɪk wɒnd", "мэ́джик уонд"],
+  ["manager", "менеджер", "ˈmænɪdʒər", "мэ́нэджэр"],
+  ["marker", "маркер", "ˈmɑːrkər", "ма́ркэр"],
+  ["mayor", "мэр", "meɪər", "мэ́йэр"],
+  ["mechanic", "механик", "mɪˈkænɪk", "микэ́ник"],
+  ["medicine", "лекарство", "ˈmedɪsɪn", "мэ́дисин"],
+  ["meeting", "встреча", "ˈmiːtɪŋ", "ми́тинг"],
+  ["memory", "память, воспоминание", "ˈmeməri", "мэ́мэри"],
+  ["message", "сообщение", "ˈmesɪdʒ", "мэ́сидж"],
+  ["metro", "метро", "ˈmetroʊ", "мэ́троу"],
+  ["microphone", "микрофон", "ˈmaɪkrəfoʊn", "ма́йкрофоун"],
+  ["mirror", "зеркало", "ˈmɪrər", "ми́рэр"],
+  ["mistake", "ошибка", "mɪˈsteɪk", "мистэ́йк"],
+  ["mobile data", "мобильный интернет", "ˈmoʊbaɪl ˈdeɪtə", "мо́убайл дэ́йтэ"],
+  ["mobile phone", "мобильный телефон", "ˈmoʊbaɪl foʊn", "мо́убайл фоун"],
+  ["mop", "швабра", "mɒp", "моп"],
+  ["motivation", "мотивация", "ˌmoʊtɪˈveɪʃən", "моутивэ́йшэн"],
+  ["muscle", "мышца", "ˈmʌsəl", "ма́сэл"],
+  ["mushroom", "гриб", "ˈmʌʃruːm", "ма́шрум"],
+  ["mustache", "усы", "ˈmʌstæʃ", "ма́стэш"],
+  ["nap", "короткий сон", "næp", "нэп"],
+  ["nasal spray", "спрей для носа", "ˈneɪzəl spreɪ", "нэ́йзэл спрэй"],
+  ["nature", "природа", "ˈneɪtʃər", "нэ́йчэр"],
+  ["nausea", "тошнота", "ˈnɔːziə", "но́зиэ"],
+  ["neighbor", "сосед", "ˈneɪbər", "нэ́йбэр"],
+  ["nephew", "племянник", "ˈnefjuː", "нэ́фью"],
+  ["niece", "племянница", "niːs", "нис"],
+  ["no service", "нет сети", "noʊ ˈsɜːrvɪs", "ноу сёрвис"],
+  ["notary", "нотариус", "ˈnoʊtəri", "но́утэри"],
+  ["nutrition", "питание", "njuːˈtrɪʃən", "ньютри́шэн"],
+  ["observer", "наблюдатель", "əbˈzɜːrvər", "эбзёрвэр"],
+  ["ointment", "мазь", "ˈɔɪntmənt", "о́йнтмэнт"],
+  ["opinion", "мнение", "əˈpɪniən", "эпи́ниэн"],
+  ["ornament", "украшение", "ˈɔːrnəmənt", "о́рнэмэнт"],
+  ["outfit", "наряд", "ˈaʊtfɪt", "а́утфит"],
+  ["owner", "владелец", "ˈoʊnər", "о́унэр"],
+  ["ox", "бык", "ɒks", "окс"],
+  ["paddleboarding", "падлбординг", "ˈpædəlbɔːrdɪŋ", "пэ́дэлбординг"],
+  ["painkiller", "обезболивающее", "ˈpeɪnkɪlər", "пэ́йнкилэр"],
+  ["palace", "дворец", "ˈpælɪs", "пэ́лис"],
+  ["participant", "участник", "pɑːrˈtɪsɪpənt", "парти́сипэнт"],
+  ["participation", "участие", "pɑːrˌtɪsɪˈpeɪʃən", "партисипэ́йшэн"],
+  ["passport control", "паспортный контроль", "ˈpæspɔːrt kənˈtroʊl", "пэ́спорт контро́ул"],
+  ["password", "пароль", "ˈpæswɜːrd", "пэ́суёрд"],
+  ["patch", "патч, наклейка/патч", "pætʃ", "пэтч"],
+  ["path", "тропа", "pæθ", "пэс"],
+  ["patience", "терпение", "ˈpeɪʃəns", "пэ́йшэнс"],
+  ["payment", "оплата", "ˈpeɪmənt", "пэ́ймэнт"],
+  ["pharmacy", "аптека", "ˈfɑːrməsi", "фа́рмэси"],
+  ["physical activity", "физическая активность", "ˈfɪzɪkəl ækˈtɪvɪti", "фи́зикэл экти́вити"],
+  ["pilot", "пилот", "ˈpaɪlət", "па́йлэт"],
+  ["PIN code", "пин-код", "pɪn koʊd", "пин коуд"],
+  ["plaster", "пластырь", "ˈplæstər", "плэ́стэр"],
+  ["plenty", "много", "ˈplenti", "плэ́нти"],
+  ["power", "власть, сила", "ˈpaʊər", "па́уэр"],
+  ["power of attorney", "доверенность", "ˈpaʊər əv əˈtɜːrni", "па́уэр эв этёрни"],
+  ["pre-made ingredient", "заготовка", "priːmeɪd ɪnˈɡriːdiənt", "примэ́йд ингри́диэнт"],
+  ["presentation", "презентация", "ˌprezənˈteɪʃən", "прэзэнтэ́йшэн"],
+  ["price", "цена", "praɪs", "прайс"],
+  ["pride", "гордость", "praɪd", "прайд"],
+  ["privacy", "приватность", "ˈpraɪvəsi", "пра́йвэси"],
+  ["prize", "приз", "praɪz", "прайз"],
+  ["progress", "прогресс", "ˈprɒɡres", "про́грэс"],
+  ["project", "проект", "ˈprɒdʒekt", "про́джэкт"],
+  ["promise", "обещание", "ˈprɒmɪs", "про́мис"],
+  ["psychiatrist", "психиатр", "saɪˈkaɪətrɪst", "сайка́йэтрист"],
+  ["psychologist", "психолог", "saɪˈkɒlədʒɪst", "сайко́лэджист"],
+  ["psychotherapist", "психотерапевт", "ˌsaɪkoʊˈθerəpɪst", "сайкосэ́рэпист"],
+  ["pump", "насос", "pʌmp", "памп"],
+  ["rag", "тряпка", "ræɡ", "рэг"],
+  ["realization", "осознание", "ˌriːəlɪˈzeɪʃən", "риэлизэ́йшэн"],
+  ["reason", "причина", "ˈriːzən", "ри́зэн"],
+  ["receipt", "чек", "rɪˈsiːt", "риси́т"],
+  ["reception", "приём, сигнал", "rɪˈsepʃən", "рисэ́пшэн"],
+  ["reception desk", "стойка регистрации", "rɪˈsepʃən desk", "рисэ́пшэн дэск"],
+  ["receptionist", "администратор", "rɪˈsepʃənɪst", "рисэ́пшэнист"],
+  ["recipe", "рецепт", "ˈresɪpi", "рэ́сипи"],
+  ["recipe book", "кулинарная книга", "ˈresɪpi bʊk", "рэ́сипи бук"],
+  ["regret", "сожаление", "rɪˈɡret", "ригрэ́т"],
+  ["relationship", "отношения", "rɪˈleɪʃənʃɪp", "рилэ́йшэншип"],
+  ["relative", "родственник", "ˈrelətɪv", "рэ́лэтив"],
+  ["renovation", "ремонт", "ˌrenəˈveɪʃən", "рэновэ́йшэн"],
+  ["repairman", "ремонтник", "rɪˈperˌmæn", "рипэ́рмэн"],
+  ["report", "отчёт", "rɪˈpɔːrt", "рипо́рт"],
+  ["reputation", "репутация", "ˌrepjʊˈteɪʃən", "рэпьютэ́йшэн"],
+  ["residence permit", "ВНЖ", "ˈrezɪdəns ˈpɜːrmɪt", "рэ́зидэнс пёрмит"],
+  ["responsibility", "ответственность", "rɪˌspɒnsɪˈbɪlɪti", "риспонсиби́лити"],
+  ["ride", "поездка", "raɪd", "райд"],
+  ["river", "река", "ˈrɪvər", "ри́вэр"],
+  ["riverbank", "берег реки", "ˈrɪvərbæŋk", "ри́вэрбэнк"],
+  ["roommate", "сосед по комнате/квартире", "ˈruːmmeɪt", "ру́ммэйт"],
+  ["roundabout", "круговое движение", "ˈraʊndəbaʊt", "ра́ундэбаут"],
+  ["routine", "рутина, режим", "ruːˈtiːn", "рути́н"],
+  ["ruler", "правитель", "ˈruːlər", "ру́лэр"],
+  ["runny nose", "насморк", "ˈrʌni noʊz", "ра́ни ноуз"],
+  ["schedule", "расписание", "ˈskedʒuːl", "скэ́джул"],
+  ["screen", "экран", "skriːn", "скрин"],
+  ["screen lock", "блокировка экрана", "skriːn lɒk", "скрин лок"],
+  ["seafood", "морепродукты", "ˈsiːfuːd", "си́фуд"],
+  ["seaside", "морская набережная", "ˈsiːsaɪd", "си́сайд"],
+  ["servant", "слуга", "ˈsɜːrvənt", "сёрвэнт"],
+  ["server", "сервер", "ˈsɜːrvər", "сёрвэр"],
+  ["service", "услуга, служение", "ˈsɜːrvɪs", "сёрвис"],
+  ["settings", "настройки", "ˈsetɪŋz", "сэ́тингз"],
+  ["sheet", "простыня", "ʃiːt", "шит"],
+  ["sick leave", "больничный", "sɪk liːv", "сик лив"],
+  ["signal", "сигнал", "ˈsɪɡnəl", "си́гнэл"],
+  ["SIM card", "SIM-карта", "sɪm kɑːrd", "сим кард"],
+  ["sink", "раковина", "sɪŋk", "синк"],
+  ["sleeping pill", "снотворное", "ˈsliːpɪŋ pɪl", "сли́пинг пил"],
+  ["smartphone", "смартфон", "ˈsmɑːrtfoʊn", "смарт фоун"],
+  ["soap", "мыло", "soʊp", "соуп"],
+  ["social media", "соцсети", "ˈsoʊʃəl ˈmiːdiə", "со́ушэл ми́диэ"],
+  ["software", "программное обеспечение", "ˈsɒftweər", "со́фтуэр"],
+  ["solution", "решение", "səˈluːʃən", "солю́шэн"],
+  ["sore throat", "больное горло", "sɔːr θroʊt", "сор сроут"],
+  ["speaker", "динамик, колонка", "ˈspiːkər", "спи́кэр"],
+  ["sponge", "губка", "spʌndʒ", "спандж"],
+  ["stage", "сцена", "steɪdʒ", "стэйдж"],
+  ["startup", "стартап", "ˈstɑːrtʌp", "ста́ртап"],
+  ["stomach ache", "боль в животе", "ˈstʌmək eɪk", "ста́мэк эйк"],
+  ["stopover", "пересадка", "ˈstɒpoʊvər", "сто́поувэр"],
+  ["storage", "память телефона", "ˈstɔːrɪdʒ", "сто́ридж"],
+  ["storm", "шторм", "stɔːrm", "сторм"],
+  ["stranger", "незнакомец", "ˈstreɪndʒər", "стрэ́йнджэр"],
+  ["subject", "предмет", "ˈsʌbdʒɪkt", "са́бджикт"],
+  ["subway", "метро", "ˈsʌbweɪ", "са́бвэй"],
+  ["success", "успех", "səkˈses", "саксэ́с"],
+  ["sunrise", "рассвет", "ˈsʌnraɪz", "са́нрайз"],
+  ["sunshine", "солнечный свет", "ˈsʌnʃaɪn", "са́ншайн"],
+  ["surprise", "сюрприз, удивление", "sərˈpraɪz", "сэрпра́йз"],
+  ["symptom", "симптом", "ˈsɪmptəm", "си́мптэм"],
+  ["talent show", "шоу талантов", "ˈtælənt ʃoʊ", "тэ́лэнт шоу"],
+  ["task", "задача", "tæsk", "тэск"],
+  ["team", "команда", "tiːm", "тим"],
+  ["telemedicine", "телемедицина", "ˈtelɪmedɪsɪn", "тэ́лимэдисин"],
+  ["temptation", "соблазн", "tempˈteɪʃən", "тэмптэ́йшэн"],
+  ["text message", "текстовое сообщение", "tekst ˈmesɪdʒ", "тэкст мэ́сидж"],
+  ["throne", "трон", "θroʊn", "сроун"],
+  ["touchscreen", "сенсорный экран", "ˈtʌtʃskriːn", "та́чскрин"],
+  ["tour", "тур", "tʊər", "туэр"],
+  ["tower", "башня", "ˈtaʊər", "та́уэр"],
+  ["tradition", "традиция", "trəˈdɪʃən", "трэди́шэн"],
+  ["traffic", "движение, трафик", "ˈtræfɪk", "трэ́фик"],
+  ["traffic light", "светофор", "ˈtræfɪk laɪt", "трэ́фик лайт"],
+  ["translation agency", "бюро переводов", "trænsˈleɪʃən ˈeɪdʒənsi", "трэнслэ́йшэн э́йджэнси"],
+  ["trash", "мусор", "træʃ", "трэш"],
+  ["treatment", "лечение", "ˈtriːtmənt", "три́тмэнт"],
+  ["treehouse", "домик на дереве", "ˈtriːhaʊs", "три́хаус"],
+  ["truth", "правда", "truːθ", "трус"],
+  ["underground", "метро", "ˈʌndərɡraʊnd", "а́ндэрграунд"],
+  ["underground passage", "подземный переход", "ˈʌndərɡraʊnd ˈpæsɪdʒ", "а́ндэрграунд пэ́сидж"],
+  ["university", "университет", "ˌjuːnɪˈvɜːrsɪti", "юнивёрсити"],
+  ["update", "обновление", "ˈʌpdeɪt", "а́пдэйт"],
+  ["vaccination", "вакцинация", "ˌvæksɪˈneɪʃən", "вэксинэ́йшэн"],
+  ["vacuum cleaner", "пылесос", "ˈvækjuːm ˈkliːnər", "вэ́кьюм кли́нэр"],
+  ["value", "ценность", "ˈvæljuː", "вэ́лью"],
+  ["venue", "площадка, место проведения", "ˈvenjuː", "вэ́нью"],
+  ["version", "версия", "ˈvɜːrʒən", "вёржэн"],
+  ["view", "вид", "vjuː", "вью"],
+  ["village", "деревня", "ˈvɪlɪdʒ", "ви́лидж"],
+  ["villain", "злодей", "ˈvɪlən", "ви́лэн"],
+  ["voicemail", "голосовая почта", "ˈvɔɪsmeɪl", "во́йсмэйл"],
+  ["volunteer work", "волонтёрская работа", "ˌvɒlənˈtɪər wɜːrk", "волэнти́р уёрк"],
+  ["waitress", "официантка", "ˈweɪtrɪs", "уэ́йтрис"],
+  ["wand", "палочка", "wɒnd", "уонд"],
+  ["warmth", "теплота", "wɔːrmθ", "уормс"],
+  ["warranty", "гарантия", "ˈwɒrənti", "уо́рэнти"],
+  ["washing machine", "стиральная машина", "ˈwɒʃɪŋ məˈʃiːn", "уо́шинг мэши́н"],
+  ["washing powder", "стиральный порошок", "ˈwɒʃɪŋ ˈpaʊdər", "уо́шинг па́удэр"],
+  ["Wi-Fi", "вай-фай", "ˈwaɪfaɪ", "уа́йфай"],
+  ["wind", "ветер", "wɪnd", "уинд"],
+  ["wound", "рана", "wuːnd", "вунд"],
+  ["writer", "писатель", "ˈraɪtər", "ра́йтэр"],
+  ["advantage", "преимущество", "ədˈvɑːntɪdʒ", "эдва́нтидж"],
+  ["blanket", "плед, одеяло", "ˈblæŋkɪt", "блэ́нкит"],
+  ["brakes", "тормоза", "breɪks", "брэйкс"],
+  ["caption", "подпись под фото", "ˈkæpʃən", "кэ́пшэн"],
+  ["commission", "комиссия, сбор", "kəˈmɪʃən", "коми́шэн"],
+  ["competitor", "конкурент", "kəmˈpetɪtər", "компэ́титэр"],
+  ["conclusion", "вывод, заключение", "kənˈkluːʒən", "конклю́жэн"],
+  ["currency", "валюта", "ˈkɜːrənsi", "кёрэнси"],
+  ["engagement", "вовлечённость аудитории", "ɪnˈɡeɪdʒmənt", "ингэ́йджмэнт"],
+  ["fault", "вина, неисправность", "fɔːlt", "фолт"],
+  ["follower", "подписчик", "ˈfɒloʊər", "фо́лоуэр"],
+  ["forecast", "прогноз", "ˈfɔːrkæst", "фо́ркэст"],
+  ["frustration", "разочарование, раздражение", "frʌˈstreɪʃən", "фрастрэ́йшэн"],
+  ["harm", "вред", "hɑːrm", "харм"],
+  ["hood", "капот", "hʊd", "худ"],
+  ["income", "доход", "ˈɪnkʌm", "и́нкам"],
+  ["influencer", "инфлюенсер", "ˈɪnfluənsər", "и́нфлуэнсэр"],
+  ["infrastructure", "инфраструктура", "ˈɪnfrəˌstrʌktʃər", "и́нфрэстрактчэр"],
+  ["injection", "укол, инъекция", "ɪnˈdʒekʃən", "инджэ́кшэн"],
+  ["inspiration", "вдохновение", "ˌɪnspɪˈreɪʃən", "инспирэ́йшэн"],
+  ["jack", "домкрат", "dʒæk", "джэк"],
+  ["loan", "кредит, займ", "loʊn", "лоун"],
+  ["mess", "беспорядок", "mes", "мэс"],
+  ["mortgage", "ипотека", "ˈmɔːrɡɪdʒ", "мо́ргидж"],
+  ["obligation", "обязательство", "ˌɒblɪˈɡeɪʃən", "облигэ́йшэн"],
+  ["pause", "пауза", "pɔːz", "поз"],
+  ["pickup point", "пункт выдачи", "ˈpɪkʌp pɔɪnt", "пи́кап пойнт"],
+  ["posture", "осанка", "ˈpɒstʃər", "по́счэр"],
+  ["procedure", "процедура", "prəˈsiːdʒər", "просидэр"],
+  ["reach", "охват (аудитории)", "riːtʃ", "рич"],
+  ["refund", "возврат денег", "ˈriːfʌnd", "ри́фанд"],
+  ["replacement", "замена", "rɪˈpleɪsmənt", "риплэ́йсмэнт"],
+  ["requirement", "требование", "rɪˈkwaɪərmənt", "риква́йэрмэнт"],
+  ["restriction", "ограничение", "rɪˈstrɪkʃən", "ристри́кшэн"],
+  ["route", "маршрут", "ruːt", "рут"],
+  ["scam", "мошенничество", "skæm", "скэм"],
+  ["seizure", "приступ", "ˈsiːʒər", "си́жэр"],
+  ["spam", "спам", "spæm", "спэм"],
+  ["supplier", "поставщик", "səˈplaɪər", "сэпла́йэр"],
+  ["thread", "цепочка сообщений", "θred", "срэд"],
+  ["tire shop", "шиномонтаж", "ˈtaɪər ʃɒp", "та́йэр шоп"],
+  ["typo", "опечатка", "ˈtaɪpoʊ", "та́йпоу"],
+  ["username", "имя пользователя", "ˈjuːzərneɪm", "ю́зэрнэйм"],
+];
+const PHRASAL = [
+  ["ask out", "пригласить на свидание", "æsk aʊt", "эск аут"],
+  ["break down", "сломаться", "breɪk daʊn", "брэйк даун"],
+  ["break up", "расстаться", "breɪk ʌp", "брэйк ап"],
+  ["bring up", "поднять тему, воспитывать", "brɪŋ ʌp", "бринг ап"],
+  ["call off", "отменить", "kɔːl ɒf", "кол оф"],
+  ["calm down", "успокоиться", "kɑːm daʊn", "кам даун"],
+  ["carry on", "продолжать", "ˈkæri ɒn", "кэ́ри он"],
+  ["cheer up", "взбодриться, подбодрить", "tʃɪər ʌp", "чир ап"],
+  ["clean up", "убрать", "kliːn ʌp", "клин ап"],
+  ["come across", "наткнуться на", "kʌm əˈkrɒs", "кам экро́с"],
+  ["come back", "вернуться", "kʌm bæk", "кам бэк"],
+  ["come up with", "придумать", "kʌm ʌp wɪð", "кам ап уиз"],
+  ["cut down on", "сократить", "kʌt daʊn ɒn", "кат даун он"],
+  ["drop by", "зайти ненадолго", "drɒp baɪ", "дроп бай"],
+  ["figure out", "выяснить, разобраться", "ˈfɪɡər aʊt", "фи́гэр аут"],
+  ["fill in", "заполнить", "fɪl ɪn", "фил ин"],
+  ["find out", "узнать", "faɪnd aʊt", "файнд аут"],
+  ["get along with", "ладить с", "ɡet əˈlɒŋ wɪð", "гэт элонг уиз"],
+  ["get back", "вернуться", "ɡet bæk", "гэт бэк"],
+  ["get over", "оправиться от", "ɡet ˈoʊvər", "гэт о́увэр"],
+  ["give away", "раздавать", "ɡɪv əˈweɪ", "гив эуэ́й"],
+  ["give back", "вернуть", "ɡɪv bæk", "гив бэк"],
+  ["give up", "сдаваться, бросать", "ɡɪv ʌp", "гив ап"],
+  ["go on", "продолжаться", "ɡoʊ ɒn", "гоу он"],
+  ["grow up", "вырасти", "ɡroʊ ʌp", "гроу ап"],
+  ["hang out", "проводить время", "hæŋ aʊt", "хэнг аут"],
+  ["hold on", "подождать", "hoʊld ɒn", "хоулд он"],
+  ["keep on", "продолжать", "kiːp ɒn", "кип он"],
+  ["keep up with", "успевать за", "kiːp ʌp wɪð", "кип ап уиз"],
+  ["keep in touch", "оставаться на связи", "kiːp ɪn tʌtʃ", "кип ин тач"],
+  ["look after", "присматривать", "lʊk ˈɑːftər", "лук а́фтэр"],
+  ["look for", "искать", "lʊk fɔːr", "лук фор"],
+  ["look forward to", "ждать с нетерпением", "lʊk ˈfɔːrwərd tuː", "лук фо́руэрд ту"],
+  ["look up", "искать информацию", "lʊk ʌp", "лук ап"],
+  ["pick up", "подобрать; заехать за", "pɪk ʌp", "пик ап"],
+  ["put away", "убрать на место", "pʊt əˈweɪ", "пут эуэ́й"],
+  ["put off", "откладывать", "pʊt ɒf", "пут оф"],
+  ["run into", "случайно встретить", "rʌn ˈɪntuː", "ран и́нту"],
+  ["set up", "организовать, настроить", "set ʌp", "сэт ап"],
+  ["show up", "появиться", "ʃoʊ ʌp", "шоу ап"],
+  ["sort out", "разобраться", "sɔːrt aʊt", "сорт аут"],
+  ["take after", "быть похожим на", "teɪk ˈɑːftər", "тэйк а́фтэр"],
+  ["take off", "взлететь; снять", "teɪk ɒf", "тэйк оф"],
+  ["take out", "вывести, вынести", "teɪk aʊt", "тэйк аут"],
+  ["take up", "начать заниматься", "teɪk ʌp", "тэйк ап"],
+  ["throw away", "выбросить", "θroʊ əˈweɪ", "сроу эуэ́й"],
+  ["try on", "примерить", "traɪ ɒn", "трай он"],
+  ["turn down", "отказаться; убавить", "tɜːrn daʊn", "тёрн даун"],
+  ["turn on", "включить", "tɜːrn ɒn", "тёрн он"],
+  ["turn off", "выключить", "tɜːrn ɒf", "тёрн оф"],
+  ["wake up", "проснуться", "weɪk ʌp", "уэйк ап"],
+  ["work out", "тренироваться; получиться", "wɜːrk aʊt", "уёрк аут"],
+  ["back off", "отступить", "bæk ɒf", "бэк оф"],
+  ["be back", "вернуться", "biː bæk", "би бэк"],
+  ["be out", "отсутствовать", "biː aʊt", "би аут"],
+  ["be over", "окончиться", "biː ˈoʊvər", "би о́увэр"],
+  ["be up", "проснуться", "biː ʌp", "би ап"],
+  ["be up to", "собираться сделать", "biː ʌp tuː", "би ап ту"],
+  ["blow up", "взорваться", "bloʊ ʌp", "блоу ап"],
+  ["break out", "вырваться", "breɪk aʊt", "брэйк аут"],
+  ["call back", "перезвонить", "kɔːl bæk", "кол бэк"],
+  ["carry out", "выполнять", "ˈkæri aʊt", "кэ́ри аут"],
+  ["catch up", "догнать", "kætʃ ʌp", "кэтч ап"],
+  ["check in", "зарегистрироваться", "tʃek ɪn", "чек ин"],
+  ["check out", "проверять", "tʃek aʊt", "чек аут"],
+  ["come from", "происходить из", "kʌm frɒm", "кам фром"],
+  ["come in", "входить", "kʌm ɪn", "кам ин"],
+  ["come on", "давай!", "kʌm ɒn", "кам он"],
+  ["come out", "выходить", "kʌm aʊt", "кам аут"],
+  ["come over", "заезжать", "kʌm ˈoʊvər", "кам о́увэр"],
+  ["come up", "появляться", "kʌm ʌp", "кам ап"],
+  ["count on", "рассчитывать на", "kaʊnt ɒn", "каунт он"],
+  ["cut off", "отрезать", "kʌt ɒf", "кат оф"],
+  ["cut out", "вырезать", "kʌt aʊt", "кат аут"],
+  ["end up", "оказаться", "end ʌp", "энд ап"],
+  ["get along", "ладить", "ɡet əˈlɒŋ", "гэт элонг"],
+  ["get around", "обойти", "ɡet əˈraʊnd", "гэт эра́унд"],
+  ["get away", "ускользнуть", "ɡet əˈweɪ", "гэт эуэ́й"],
+  ["get in", "войти", "ɡet ɪn", "гэт ин"],
+  ["get off", "выходить", "ɡet ɒf", "гэт оф"],
+  ["get on", "садиться на", "ɡet ɒn", "гэт он"],
+  ["get out", "уходить", "ɡet aʊt", "гэт аут"],
+  ["get through", "справиться", "ɡet θruː", "гэт сру"],
+  ["get up", "вставать", "ɡet ʌp", "гэт ап"],
+  ["go away", "уходить", "ɡoʊ əˈweɪ", "гоу эуэ́й"],
+  ["go back", "возвращаться", "ɡoʊ bæk", "гоу бэк"],
+  ["go down", "спускаться вниз", "ɡoʊ daʊn", "гоу даун"],
+  ["go off", "уходить", "ɡoʊ ɒf", "гоу оф"],
+  ["go out", "выходить", "ɡoʊ aʊt", "гоу аут"],
+  ["go over", "повторять", "ɡoʊ ˈoʊvər", "гоу о́увэр"],
+  ["go through", "пройти через", "ɡoʊ θruː", "гоу сру"],
+  ["go up", "подниматься", "ɡoʊ ʌp", "гоу ап"],
+  ["hang on", "подождите!", "hæŋ ɒn", "хэнг он"],
+  ["hang up", "положить трубку", "hæŋ ʌp", "хэнг ап"],
+  ["help out", "помочь", "help aʊt", "хэлп аут"],
+  ["keep up", "не отставать", "kiːp ʌp", "кип ап"],
+  ["knock out", "вырубить", "nɒk aʊt", "нок аут"],
+  ["lie down", "лечь", "laɪ daʊn", "лай даун"],
+  ["line up", "выстраиваться в очередь", "laɪn ʌp", "лайн ап"],
+  ["look back", "оглядываться", "lʊk bæk", "лук бэк"],
+  ["look out", "быть осторожным", "lʊk aʊt", "лук аут"],
+  ["look over", "просматривать", "lʊk ˈoʊvər", "лук о́увэр"],
+  ["make out", "понимать", "meɪk aʊt", "мэйк аут"],
+  ["make up", "составлять", "meɪk ʌp", "мэйк ап"],
+  ["move in", "въезжать", "muːv ɪn", "мув ин"],
+  ["move on", "идти дальше", "muːv ɒn", "мув он"],
+  ["move out", "съезжать", "muːv aʊt", "мув аут"],
+  ["pass out", "терять сознание", "pæs aʊt", "пэс аут"],
+  ["point out", "указывать", "pɔɪnt aʊt", "пойнт аут"],
+  ["pull off", "справиться", "pʊl ɒf", "пул оф"],
+  ["pull out", "вытаскивать", "pʊl aʊt", "пул аут"],
+  ["pull up", "подъезжать", "pʊl ʌp", "пул ап"],
+  ["put a way", "убирать", "pʊt əˈweɪ", "пут эуэ́й"],
+  ["put down", "положить", "pʊt daʊn", "пут даун"],
+  ["put on", "надевать", "pʊt ɒn", "пут он"],
+  ["put out", "тушить", "pʊt aʊt", "пут аут"],
+  ["run away", "убегать", "rʌn əˈweɪ", "ран эуэ́й"],
+  ["run out", "заканчиваться", "rʌn aʊt", "ран аут"],
+  ["set off", "отправляться в путь", "set ɒf", "сэт оф"],
+  ["settle down", "успокаиваться", "ˈsetəl daʊn", "сэ́тэл даун"],
+  ["shut down", "выключить", "ʃʌt daʊn", "шат даун"],
+  ["shut up", "замолчать", "ʃʌt ʌp", "шат ап"],
+  ["sit down", "садиться", "sɪt daʊn", "сит даун"],
+  ["stand by", "ждать", "stænd baɪ", "стэнд бай"],
+  ["stand out", "выделяться", "stænd aʊt", "стэнд аут"],
+  ["stand up", "вставать", "stænd ʌp", "стэнд ап"],
+  ["switch off", "выключать", "swɪtʃ ɒf", "свич оф"],
+  ["switch on", "включать", "swɪtʃ ɒn", "свич он"],
+  ["take away", "забирать", "teɪk əˈweɪ", "тэйк эуэ́й"],
+  ["take back", "взять назад", "teɪk bæk", "тэйк бэк"],
+  ["take in", "воспринимать", "teɪk ɪn", "тэйк ин"],
+  ["take on", "принимать", "teɪk ɒn", "тэйк он"],
+  ["take over", "взять под контроль", "teɪk ˈoʊvər", "тэйк о́увэр"],
+  ["throw up", "тошнить", "θroʊ ʌp", "сроу ап"],
+  ["turn around", "оборачиваться", "tɜːrn əˈraʊnd", "тёрн эра́унд"],
+  ["turn into", "превращаться", "tɜːrn ˈɪntuː", "тёрн и́нту"],
+  ["turn out", "оказаться", "tɜːrn aʊt", "тёрн аут"],
+  ["turn up", "появляться", "tɜːrn ʌp", "тёрн ап"],
+  ["walk away", "уходить", "wɔːk əˈweɪ", "уок эуэ́й"],
+  ["watch out", "быть осторожным", "wɒtʃ aʊt", "уоч аут"],
+  ["wind up", "оказаться", "waɪnd ʌp", "уайнд ап"],
+  ["write down", "записывать", "", ""],
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────────────────
+let cat    = 'verbs'; // current category
+let mode   = 'quiz';  // current mode
+let dir    = 'ru';    // quiz direction for verbs
+let dir2   = 'ru';    // quiz direction for adj/nouns/phrasal
+let idir   = 'ru';    // input direction for verbs
+let idir2  = 'ru';    // input direction for adj/nouns/phrasal
+let onlyIrreg = false;
+
+let quizList = [], quizIdx = 0, quizAnswered = false;
+let inputList = [], inputIdx = 0, inputAnswered = false;
+let fcList = [], fcIdx = 0, fcLearned = new Set();
+
+let totalOk = 0, totalErr = 0, streak = 0;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STORAGE  (localStorage keys)
+// ─────────────────────────────────────────────────────────────────────────────
+const SK = {
+  cv:  'wt_cv',   // custom verbs
+  ca:  'wt_ca',   // custom adjs
+  cn:  'wt_cn',   // custom nouns
+  cph: 'wt_cph',  // custom phrasal
+  del: 'wt_del',  // permanently deleted  {cat:word, ...}
+  ed:  'wt_ed',   // edit overrides       {cat:word: newRu}
+};
+
+let customVerbs   = [];
+let customAdjs    = [];
+let customNouns   = [];
+let customPhrasal = [];
+let deleted  = new Set();   // "verbs:act", "nouns:ability", …
+let edits    = {};          // "verbs:act" → "делать"
+
+function loadStorage() {
+  const load = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch { return fallback; } };
+  customVerbs   = load(SK.cv,  []);
+  customAdjs    = load(SK.ca,  []);
+  customNouns   = load(SK.cn,  []);
+  customPhrasal = load(SK.cph, []);
+  deleted  = new Set(load(SK.del, []));
+  edits    = load(SK.ed,  {});
+}
+
+function saveStorage() {
+  const s = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} };
+  s(SK.cv,  customVerbs);
+  s(SK.ca,  customAdjs);
+  s(SK.cn,  customNouns);
+  s(SK.cph, customPhrasal);
+  s(SK.del, [...deleted]);
+  s(SK.ed,  edits);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DATA HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+function isActive(c, word) { return !deleted.has(c + ':' + word); }
+function getRu(c, entry) {
+  const key = c + ':' + entry[0];
+  return edits[key] !== undefined ? edits[key] : (c === 'verbs' ? entry[3] : entry[1]);
+}
+function isIrreg(v) {
+  return !(v[0]+'ed'===v[1] || v[0].replace(/e$/,'')+'ed'===v[1] || v[0].replace(/y$/,'ied')===v[1] || v[0]===v[1]);
+}
+
+function getList() {
+  let raw;
+  if      (cat === 'verbs')   raw = [...VERBS,   ...customVerbs];
+  else if (cat === 'adj')     raw = [...ADJS,    ...customAdjs];
+  else if (cat === 'nouns')   raw = [...NOUNS,   ...customNouns];
+  else                        raw = [...PHRASAL, ...customPhrasal];
+  return raw.filter(e => isActive(cat, e[0]));
+}
+
+function countWords() {
+  return getList().length;
+}
+
+function updateLogo() {
+  const labels = { verbs: 'глаголов', adj: 'прилагательных', nouns: 'существительных', phrasal: 'фразовых глаголов' };
+  document.getElementById('logo-sub').textContent = countWords() + ' ' + labels[cat];
+}
+
+function shuffle(a) {
+  a = [...a];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.random() * i | 0;
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function rand4(pool, correct) {
+  const others = shuffle(pool.filter(x => x !== correct)).slice(0, 3);
+  return shuffle([correct, ...others]);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────────────────────────────────────
+function switchCat(c) {
+  cat = c;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === c));
+  updateLogo();
+  restart();
+}
+
+function switchMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+  ['quiz','input','cards','browse','add'].forEach(p => {
+    document.getElementById('pane-' + p).classList.toggle('hidden', p !== m);
+  });
+  restart();
+}
+
+function restart() {
+  if (mode === 'quiz')   startQuiz();
+  if (mode === 'input')  startInput();
+  if (mode === 'cards')  startCards();
+  if (mode === 'browse') renderBrowse();
+  if (mode === 'add')    renderAdd();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUIZ
+// ─────────────────────────────────────────────────────────────────────────────
+function setDir(d) {
+  if (d === 'irreg') { onlyIrreg = !onlyIrreg; } else { dir = d; }
+  document.querySelectorAll('[data-dir]').forEach(b => {
+    if (b.dataset.dir === 'irreg') b.classList.toggle('active', onlyIrreg);
+    else b.classList.toggle('active', b.dataset.dir === dir);
+  });
+  startQuiz();
+}
+
+function setDir2(d) {
+  dir2 = d;
+  document.querySelectorAll('[data-dir2]').forEach(b => b.classList.toggle('active', b.dataset.dir2 === d));
+  startQuiz();
+}
+
+function startQuiz() {
+  // Show correct chip set
+  document.getElementById('chips-verbs').classList.toggle('hidden', cat !== 'verbs');
+  document.getElementById('chips-simple').classList.toggle('hidden', cat === 'verbs');
+
+  document.getElementById('quiz-body').classList.remove('hidden');
+  document.getElementById('quiz-end').classList.add('hidden');
+
+  let pool = getList();
+  if (cat === 'verbs' && onlyIrreg) pool = pool.filter(isIrreg);
+  quizList = shuffle(pool);
+  quizIdx = 0;
+  quizAnswered = false;
+  showQuestion();
+}
+
+function showQuestion() {
+  if (quizIdx >= quizList.length) { showQuizEnd(); return; }
+  quizAnswered = false;
+  const v = quizList[quizIdx];
+  setProgress('q', quizIdx, quizList.length);
+  document.getElementById('q-fb').textContent = '';
+  document.getElementById('q-fb').className = 'feedback';
+
+  if (cat === 'verbs') {
+    if (dir === 'ru') {
+      setText('q-lbl', 'Рус → V1');
+      setText('q-word', getRu('verbs', v));
+      setText('q-hint', '→ Выбери правильный глагол');
+      setQPron('', '');
+      renderAnswers(rand4(quizList.map(x => x[0]), v[0]), v[0], false);
+    } else if (dir === 'en') {
+      setText('q-lbl', 'V1 → Рус');
+      setText('q-word', v[0]);
+      setText('q-hint', '→ Выбери перевод');
+      setQPron(v[4] || '', v[5] || '');
+      renderAnswers(rand4(quizList.map(x => getRu('verbs', x)), getRu('verbs', v)), getRu('verbs', v), true);
+    } else {
+      const correct = v[1] + ' / ' + v[2];
+      setText('q-lbl', 'V1 → V2/V3');
+      setText('q-word', v[0]);
+      setText('q-hint', '→ Выбери правильные формы');
+      setQPron(v[4] || '', v[5] || '');
+      renderAnswers(rand4(quizList.map(x => x[1] + ' / ' + x[2]), correct), correct, false);
+    }
+  } else {
+    const ruIdx = 1;
+    if (dir2 === 'ru') {
+      setText('q-lbl', 'Рус → Англ');
+      setText('q-word', getRu(cat, v));
+      setText('q-hint', '→ Выбери правильный вариант');
+      setQPron('', '');
+      renderAnswers(rand4(quizList.map(x => x[0]), v[0]), v[0], false);
+    } else {
+      setText('q-lbl', 'Англ → Рус');
+      setText('q-word', v[0]);
+      setText('q-hint', '→ Выбери перевод');
+      setQPron(v[2] || '', v[3] || '');
+      renderAnswers(rand4(quizList.map(x => getRu(cat, x)), getRu(cat, v)), getRu(cat, v), true);
+    }
+  }
+}
+
+function renderAnswers(opts, correct, plain) {
+  const grid = document.getElementById('q-answers');
+  grid.innerHTML = '';
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'ans-btn' + (plain ? ' plain' : '');
+    btn.textContent = opt;
+    btn.addEventListener('click', () => pickAnswer(btn, opt, correct));
+    grid.appendChild(btn);
+  });
+}
+
+function pickAnswer(btn, chosen, correct) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  document.querySelectorAll('.ans-btn').forEach(b => {
+    b.disabled = true;
+    if (b.textContent === correct) b.classList.add('correct');
+  });
+  const fb = document.getElementById('q-fb');
+  if (chosen === correct) {
+    btn.classList.add('correct');
+    fb.textContent = '✓ Правильно!'; fb.className = 'feedback ok';
+    totalOk++; streak++;
+  } else {
+    btn.classList.add('wrong');
+    fb.textContent = '✗ Правильно: ' + correct; fb.className = 'feedback err';
+    totalErr++; streak = 0;
+  }
+  updateStats();
+  setTimeout(() => { quizIdx++; showQuestion(); }, 1200);
+}
+
+function showQuizEnd() {
+  document.getElementById('quiz-body').classList.add('hidden');
+  document.getElementById('quiz-end').classList.remove('hidden');
+  const total = quizList.length;
+  const pct = total ? Math.round(totalOk / (totalOk + totalErr) * 100) : 0;
+  setText('end-score', pct + '%');
+  setText('end-desc', 'Раунд завершён! ' + (pct >= 80 ? '🎉' : pct >= 50 ? '👍' : '📚'));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INPUT
+// ─────────────────────────────────────────────────────────────────────────────
+function setIDir(d) {
+  idir = d;
+  document.querySelectorAll('[data-idir]').forEach(b => b.classList.toggle('active', b.dataset.idir === d));
+  startInput();
+}
+function setIDir2(d) {
+  idir2 = d;
+  document.querySelectorAll('[data-idir2]').forEach(b => b.classList.toggle('active', b.dataset.idir2 === d));
+  startInput();
+}
+
+function startInput() {
+  document.getElementById('chips-input-verbs').classList.toggle('hidden', cat !== 'verbs');
+  document.getElementById('chips-input-simple').classList.toggle('hidden', cat === 'verbs');
+  inputList = shuffle(getList());
+  inputIdx = 0; inputAnswered = false;
+  showInputQ();
+}
+
+function showInputQ() {
+  if (inputIdx >= inputList.length) {
+    setText('i-word', '🎉 Все слова пройдены!'); setText('i-hint', '');
+    document.getElementById('i-area-forms').classList.add('hidden');
+    document.getElementById('i-area-single').classList.add('hidden');
+    const nb = document.getElementById('i-next');
+    nb.textContent = 'Начать заново'; nb.onclick = startInput;
+    return;
+  }
+  inputAnswered = false;
+  const v = inputList[inputIdx];
+  setProgress('i', inputIdx, inputList.length);
+  document.getElementById('i-fb').textContent = '';
+  document.getElementById('i-fb').className = 'feedback';
+  const nb = document.getElementById('i-next');
+  nb.textContent = 'Пропустить →'; nb.onclick = nextInput;
+
+  if (cat === 'verbs' && idir === 'forms') {
+    setText('i-lbl', 'V1 → V2 + V3'); setText('i-word', v[0]); setText('i-hint', 'Введи Past Simple и Past Participle');
+    document.getElementById('i-area-forms').classList.remove('hidden');
+    document.getElementById('i-area-single').classList.add('hidden');
+    ['i-v2','i-v3'].forEach(id => { const e = document.getElementById(id); e.value = ''; e.className = 'inp'; e.disabled = false; });
+    document.getElementById('i-v2').onkeydown = e => { if (e.key === 'Enter') document.getElementById('i-v3').focus(); };
+    document.getElementById('i-v3').onkeydown = e => { if (e.key === 'Enter') checkForms(); };
+    setTimeout(() => document.getElementById('i-v2').focus(), 50);
+  } else {
+    const isRu = cat === 'verbs' ? idir === 'ru' : idir2 === 'ru';
+    const label = isRu ? 'Рус → Англ' : 'Англ → Рус';
+    const word  = isRu ? getRu(cat, v) : v[0];
+    const hint  = isRu ? 'Введи английское слово' : 'Введи перевод';
+    const ph    = isRu ? 'Английское слово...' : 'Перевод...';
+    setText('i-lbl', label); setText('i-word', word); setText('i-hint', hint);
+    document.getElementById('i-area-forms').classList.add('hidden');
+    document.getElementById('i-area-single').classList.remove('hidden');
+    const inp = document.getElementById('i-single');
+    inp.value = ''; inp.className = 'inp'; inp.disabled = false; inp.placeholder = ph;
+    inp.onkeydown = e => { if (e.key === 'Enter') checkSingle(); };
+    setTimeout(() => inp.focus(), 50);
+  }
+}
+
+function checkSingle() {
+  if (inputAnswered) return;
+  const v = inputList[inputIdx];
+  const isRu = cat === 'verbs' ? idir === 'ru' : idir2 === 'ru';
+  const correct = (isRu ? v[0] : getRu(cat, v)).toLowerCase();
+  const inp = document.getElementById('i-single');
+  const val = inp.value.trim().toLowerCase();
+  inputAnswered = true; inp.disabled = true;
+  const fb = document.getElementById('i-fb');
+  if (val === correct) {
+    inp.classList.add('correct'); fb.textContent = '✓ Правильно!'; fb.className = 'feedback ok'; totalOk++; streak++;
+  } else {
+    inp.classList.add('wrong'); fb.textContent = '✗ Правильно: ' + (isRu ? v[0] : getRu(cat, v)); fb.className = 'feedback err'; totalErr++; streak = 0;
+  }
+  document.getElementById('i-next').textContent = 'Следующее →';
+  updateStats();
+}
+
+function checkForms() {
+  if (inputAnswered) return;
+  const v = inputList[inputIdx];
+  const v2 = document.getElementById('i-v2').value.trim().toLowerCase();
+  const v3 = document.getElementById('i-v3').value.trim().toLowerCase();
+  inputAnswered = true;
+  document.getElementById('i-v2').disabled = true; document.getElementById('i-v3').disabled = true;
+  const ok2 = v2 === v[1].toLowerCase(), ok3 = v3 === v[2].toLowerCase();
+  document.getElementById('i-v2').classList.add(ok2 ? 'correct' : 'wrong');
+  document.getElementById('i-v3').classList.add(ok3 ? 'correct' : 'wrong');
+  const fb = document.getElementById('i-fb');
+  if (ok2 && ok3) { fb.textContent = '✓ Правильно!'; fb.className = 'feedback ok'; totalOk++; streak++; }
+  else { fb.textContent = '✗ Правильно: ' + v[1] + ' / ' + v[2]; fb.className = 'feedback err'; totalErr++; streak = 0; }
+  document.getElementById('i-next').textContent = 'Следующее →';
+  updateStats();
+}
+
+function nextInput() { inputIdx++; showInputQ(); }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FLASHCARDS
+// ─────────────────────────────────────────────────────────────────────────────
+function startCards() {
+  fcList = shuffle(getList()); fcIdx = 0; fcLearned = new Set(); showCard();
+}
+
+function showCard() {
+  const v = fcList[fcIdx];
+  document.getElementById('fc').classList.remove('flipped');
+  setProgress('fc', fcIdx, fcList.length);
+  const ipa  = cat === 'verbs' ? (v[4] || '') : (v[2] || '');
+  const read = cat === 'verbs' ? (v[5] || '') : (v[3] || '');
+  setText('fc-word', v[0]);
+  setText('fc-ipa',  ipa ? '['+ipa+']' : '');
+  setText('fc-read', read);
+  if (cat === 'verbs') {
+    setText('fc-sub', v[1] + ' · ' + v[2]);
+    setText('fc-back-sub', v[0] + ' → ' + v[1] + ' → ' + v[2]);
+  } else {
+    setText('fc-sub', '');
+    setText('fc-back-sub', '');
+  }
+  setText('fc-ru', getRu(cat, v));
+  document.getElementById('fc-lbtn').style.opacity = fcLearned.has(fcIdx) ? '0.4' : '1';
+  setText('fc-lcount', fcLearned.size);
+}
+
+function flipCard() { document.getElementById('fc').classList.toggle('flipped'); }
+function fcNav(d)   { fcIdx = Math.max(0, Math.min(fcList.length - 1, fcIdx + d)); showCard(); }
+function markLearned() { fcLearned.add(fcIdx); showCard(); setTimeout(() => fcNav(1), 400); }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BROWSE
+// ─────────────────────────────────────────────────────────────────────────────
+function renderBrowse() {
+  const q   = (document.getElementById('search-inp').value || '').toLowerCase();
+  const hdr = document.getElementById('tbl-head');
+  const body= document.getElementById('tbl-body');
+  const all = getList();
+  const filtered = q ? all.filter(v => v.some(x => typeof x === 'string' && x.toLowerCase().includes(q))) : all;
+
+  if (cat === 'verbs') {
+    hdr.innerHTML = '<th>V1</th><th class="col-pron">Произношение</th><th>V2</th><th>V3</th><th>Перевод</th><th></th>';
+    body.innerHTML = filtered.map(v => {
+      const ru = getRu('verbs', v);
+      return buildRow('verbs', v[0], ru,
+        `<td class="col-en">${v[0]}${isIrreg(v)?'<span class="irreg">нест.</span>':''}</td>`+
+        `<td class="col-pron"><span class="pron-ipa">${v[4] ? '['+v[4]+']' : ''}</span><span class="pron-read">${v[5]||''}</span></td>`+
+        `<td class="col-v2">${v[1]}</td><td class="col-v3">${v[2]}</td>`+
+        `<td class="col-ru" id="ru-cell-${btoa('verbs:'+v[0]).replace(/=/g,'')}">${ru}</td>`
+      );
+    }).join('');
+  } else if (cat === 'adj') {
+    hdr.innerHTML = '<th>Английский</th><th class="col-pron">Произношение</th><th>Перевод</th><th></th>';
+    body.innerHTML = filtered.map(v => {
+      const ru = getRu('adj', v);
+      return buildRow('adj', v[0], ru,
+        `<td class="col-en">${v[0]}</td>`+
+        `<td class="col-pron"><span class="pron-ipa">${v[2] ? '['+v[2]+']' : ''}</span><span class="pron-read">${v[3]||''}</span></td>`+
+        `<td class="col-ru" id="ru-cell-${btoa('adj:'+v[0]).replace(/=/g,'')}">${ru}</td>`
+      );
+    }).join('');
+  } else if (cat === 'nouns') {
+    hdr.innerHTML = '<th>Английский</th><th class="col-pron">Произношение</th><th>Перевод</th><th></th>';
+    body.innerHTML = filtered.map(v => {
+      const ru = getRu('nouns', v);
+      return buildRow('nouns', v[0], ru,
+        `<td class="col-en">${v[0]}</td>`+
+        `<td class="col-pron"><span class="pron-ipa">${v[2] ? '['+v[2]+']' : ''}</span><span class="pron-read">${v[3]||''}</span></td>`+
+        `<td class="col-ru" id="ru-cell-${btoa('nouns:'+v[0]).replace(/=/g,'')}">${ru}</td>`
+      );
+    }).join('');
+  } else {
+    hdr.innerHTML = '<th>Фразовый глагол</th><th class="col-pron">Произношение</th><th>Перевод</th><th></th>';
+    body.innerHTML = filtered.map(v => {
+      const ru = getRu('phrasal', v);
+      return buildRow('phrasal', v[0], ru,
+        `<td class="col-en">${v[0]}</td>`+
+        `<td class="col-pron"><span class="pron-ipa">${v[2] ? '['+v[2]+']' : ''}</span><span class="pron-read">${v[3]||''}</span></td>`+
+        `<td class="col-ru" id="ru-cell-${btoa('phrasal:'+v[0]).replace(/=/g,'')}">${ru}</td>`
+      );
+    }).join('');
+  }
+}
+
+// Build one table row with edit/delete buttons
+// Uses data-cat and data-word attributes; JS reads them directly — no escaping needed
+function buildRow(c, word, ru, cells) {
+  const safeWord = word.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  return `<tr>
+    ${cells}
+    <td><div class="row-actions">
+      <button class="btn-edit" data-cat="${c}" data-word="${safeWord}" data-ru="${ru.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}" title="Изменить перевод">&#x270F;</button>
+      <button class="btn-del"  data-cat="${c}" data-word="${safeWord}" title="Удалить">&#x2715;</button>
+    </div></td>
+  </tr>`;
+}
+
+// Single delegated listener on the table body
+document.getElementById('tbl-body').addEventListener('click', function(e) {
+  const editBtn = e.target.closest('.btn-edit');
+  const delBtn  = e.target.closest('.btn-del');
+  if (editBtn) {
+    startInlineEdit(editBtn.dataset.cat, editBtn.dataset.word, editBtn.dataset.ru);
+  } else if (delBtn) {
+    deleteWord(delBtn.dataset.cat, delBtn.dataset.word);
+  }
+});
+
+function deleteWord(c, word) {
+  // Remove from custom if user-added
+  if      (c === 'verbs')   customVerbs   = customVerbs.filter(v => v[0] !== word);
+  else if (c === 'adj')     customAdjs    = customAdjs.filter(v => v[0] !== word);
+  else if (c === 'nouns')   customNouns   = customNouns.filter(v => v[0] !== word);
+  else                      customPhrasal = customPhrasal.filter(v => v[0] !== word);
+  // Mark as permanently deleted (covers built-in words too)
+  deleted.add(c + ':' + word);
+  saveStorage();
+  updateLogo();
+  restart();
+}
+
+function startInlineEdit(c, word, currentRu) {
+  const key  = btoa(c + ':' + word).replace(/=/g, '');
+  const cell = document.getElementById('ru-cell-' + key);
+  if (!cell) return;
+  const val  = currentRu.replace(/&amp;/g, '&').replace(/&quot;/g, '"');
+  cell.innerHTML =
+    '<div class="inline-edit">' +
+    '<input class="inline-inp" id="ei-' + key + '" value="' + val.replace(/"/g, '&quot;') + '">' +
+    '<button class="btn-save"   data-c="' + c + '" data-w="' + word.replace(/"/g,'&quot;') + '" data-k="' + key + '" onclick="saveEdit(this.dataset.c,this.dataset.w,this.dataset.k)">&#10003;</button>' +
+    '<button class="btn-cancel" onclick="renderBrowse()">&#x2715;</button>' +
+    '</div>';
+  const inp = document.getElementById('ei-' + key);
+  if (inp) {
+    inp.focus(); inp.select();
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter')  saveEdit(c, word, key);
+      if (e.key === 'Escape') renderBrowse();
+    });
+  }
+}
+
+
+function saveEdit(c, word, key) {
+  const inp = document.getElementById('ei-' + key);
+  if (!inp || !inp.value.trim()) return;
+  edits[c + ':' + word] = inp.value.trim();
+  saveStorage();
+  renderBrowse();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADD
+// ─────────────────────────────────────────────────────────────────────────────
+function renderAdd() {
+  document.getElementById('add-verbs-form').classList.toggle('hidden', cat !== 'verbs');
+  document.getElementById('add-simple-form').classList.toggle('hidden', cat === 'verbs');
+  renderCustomList();
+}
+
+function addWord() {
+  if (cat === 'verbs') {
+    const ru = document.getElementById('av-ru').value.trim();
+    const v1 = document.getElementById('av-v1').value.trim().toLowerCase();
+    const v2 = document.getElementById('av-v2').value.trim().toLowerCase();
+    const v3 = document.getElementById('av-v3').value.trim().toLowerCase();
+    const msg = document.getElementById('av-msg');
+    if (!ru || !v1 || !v2 || !v3) { showMsg(msg, '⚠ Заполни все поля', false); return; }
+    if ([...VERBS,...customVerbs].find(v => v[0] === v1)) { showMsg(msg, `⚠ "${v1}" уже есть в словаре`, false); return; }
+    const avIpa  = document.getElementById('av-ipa').value.trim();
+    const avRead = document.getElementById('av-read').value.trim();
+    customVerbs.push([v1, v2, v3, ru, avIpa, avRead]);
+    saveStorage(); updateLogo();
+    ['av-ru','av-v1','av-v2','av-v3','av-ipa','av-read'].forEach(id => document.getElementById(id).value = '');
+    showMsg(msg, `✓ "${v1}" добавлен!`, true);
+    renderCustomList();
+  } else {
+    const ru = document.getElementById('as-ru').value.trim();
+    const en = document.getElementById('as-en').value.trim().toLowerCase();
+    const msg = document.getElementById('as-msg');
+    if (!ru || !en) { showMsg(msg, '⚠ Заполни все поля', false); return; }
+    const baseArr = cat === 'adj' ? [...ADJS,...customAdjs] : cat === 'nouns' ? [...NOUNS,...customNouns] : [...PHRASAL,...customPhrasal];
+    if (baseArr.find(v => v[0] === en)) { showMsg(msg, `⚠ "${en}" уже есть в словаре`, false); return; }
+    const asIpa  = document.getElementById('as-ipa').value.trim();
+    const asRead = document.getElementById('as-read').value.trim();
+    if      (cat === 'adj')     customAdjs.push([en, ru, asIpa, asRead]);
+    else if (cat === 'nouns')   customNouns.push([en, ru, asIpa, asRead]);
+    else                        customPhrasal.push([en, ru, asIpa, asRead]);
+    saveStorage(); updateLogo();
+    ['as-ru','as-en','as-ipa','as-read'].forEach(id => document.getElementById(id).value = '');
+    showMsg(msg, `✓ "${en}" добавлено!`, true);
+    renderCustomList();
+  }
+}
+
+function renderCustomList() {
+  const list = cat === 'verbs' ? customVerbs : cat === 'adj' ? customAdjs : cat === 'nouns' ? customNouns : customPhrasal;
+  const el = document.getElementById('custom-list');
+  document.getElementById('custom-count').textContent = list.length;
+  if (!list.length) { el.innerHTML = '<div class="empty-list">Пока нет добавленных слов</div>'; return; }
+  el.innerHTML = list.map((v, i) => {
+    const ru   = cat === 'verbs' ? v[3] : v[1];
+    const sub  = cat === 'verbs' ? `<span class="ci-sub">${v[1]} · ${v[2]}</span>` : '';
+    return `<div class="custom-item">
+      <span class="ci-en">${v[0]}</span>${sub}
+      <span class="ci-ru">${ru}</span>
+      <button class="ci-del" onclick="removeCustom(${i})">&#x2715;</button>
+    </div>`;
+  }).join('');
+}
+
+function removeCustom(idx) {
+  if      (cat === 'verbs')   customVerbs.splice(idx, 1);
+  else if (cat === 'adj')     customAdjs.splice(idx, 1);
+  else if (cat === 'nouns')   customNouns.splice(idx, 1);
+  else                        customPhrasal.splice(idx, 1);
+  saveStorage(); updateLogo(); renderCustomList();
+}
+
+function clearCustom() {
+  const list = cat === 'verbs' ? customVerbs : cat === 'adj' ? customAdjs : cat === 'nouns' ? customNouns : customPhrasal;
+  if (!list.length) return;
+  if (!confirm(`Удалить все ${list.length} своих слов?`)) return;
+  if      (cat === 'verbs')   customVerbs   = [];
+  else if (cat === 'adj')     customAdjs    = [];
+  else if (cat === 'nouns')   customNouns   = [];
+  else                        customPhrasal = [];
+  saveStorage(); updateLogo(); renderCustomList();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────────────────────────────────────
+function setText(id, txt) { document.getElementById(id).textContent = txt; }
+
+function setQPron(ipa, read) {
+  const el = document.getElementById('q-pron');
+  if (!el) return;
+  if (ipa) {
+    el.innerHTML = '<span class="pron-ipa">[' + ipa + ']</span><span class="pron-read">' + read + '</span>';
+  } else {
+    el.innerHTML = '';
+  }
+}
+
+function setProgress(prefix, idx, total) {
+  const pct = total ? Math.round(idx / total * 100) : 0;
+  document.getElementById(prefix+'-cur').textContent = idx + 1;
+  document.getElementById(prefix+'-tot').textContent = total;
+  document.getElementById(prefix+'-pct').textContent = pct + '%';
+  document.getElementById(prefix+'-fill').style.width = pct + '%';
+}
+
+function updateStats() {
+  document.getElementById('s-ok').textContent     = totalOk;
+  document.getElementById('s-err').textContent    = totalErr;
+  document.getElementById('s-streak').textContent = streak;
+}
+
+function showMsg(el, text, ok) {
+  el.textContent = text;
+  el.className = 'add-msg ' + (ok ? 'ok' : 'err');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+loadStorage();
+switchCat('verbs');
+switchMode('quiz');
+</script>
+</body>
+</html>
