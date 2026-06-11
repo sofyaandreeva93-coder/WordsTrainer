@@ -282,6 +282,19 @@ header {
 
 /* ── UTILITIES ── */
 .hidden { display: none !important; }
+.scroll-top {
+  position: fixed; bottom: 28px; right: 20px;
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--accent); border: none; color: #fff;
+  font-size: 1.2rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(124,106,247,.45);
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s;
+  z-index: 999;
+}
+.scroll-top.visible { opacity: 1; pointer-events: auto; }
+.scroll-top:hover { background: var(--accent2); }
 @media (max-width: 520px) {
   .card { padding: 16px; }
   .q-word { font-size: 1.6rem; }
@@ -1833,7 +1846,8 @@ function renderBrowse() {
   const hdr = document.getElementById('tbl-head');
   const body= document.getElementById('tbl-body');
   const all = getList();
-  const filtered = q ? all.filter(v => v.some(x => typeof x === 'string' && x.toLowerCase().includes(q))) : all;
+  const filtered = (q ? all.filter(v => v.some(x => typeof x === 'string' && x.toLowerCase().includes(q))) : all)
+    .slice().sort((a, b) => a[0].localeCompare(b[0]));
 
   if (cat === 'verbs') {
     hdr.innerHTML = '<th>V1</th><th class="col-pron">Произношение</th><th>V2</th><th>V3</th><th>Перевод</th><th></th>';
@@ -2089,6 +2103,14 @@ function showMsg(el, text, ok) {
 loadStorage();
 switchCat('verbs');
 switchMode('quiz');
+
+// Show/hide scroll-to-top button
+window.addEventListener('scroll', function() {
+  const btn = document.getElementById('scroll-top-btn');
+  if (!btn) return;
+  btn.classList.toggle('visible', window.scrollY > 300);
+});
 </script>
+<button class="scroll-top" id="scroll-top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Наверх">&#8679;</button>
 </body>
 </html>
